@@ -1,0 +1,18 @@
+{# calendar_dates, plan — planner_days dict date_iso -> text #}
+<div class="form-section planner-calendar-section">
+  <h2>Planner</h2>
+  {% if calendar_dates and calendar_dates|length > 0 %}
+  <p class="muted small">One block per day of your trip — add bullet points (one line per idea works well).</p>
+  <div class="planner-calendar">
+    {% set pd = plan.planner_days if plan and plan.planner_days else {} %}
+    {% for d in calendar_dates %}
+    <div class="planner-day">
+      <label class="planner-day-label" for="pd-{{ d }}">{{ d|fmt_dmy }}</label>
+      <textarea id="pd-{{ d }}" name="planner_day_{{ d }}" rows="3" placeholder="- Morning: …&#10;- Afternoon: …">{{ pd.get(d, '') }}</textarea>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted small">Set your trip dates above to see a day-by-day planner.</p>
+  {% endif %}
+</div>

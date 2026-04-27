@@ -1,0 +1,18 @@
+{# Optional partial: read-only reminder if you pass checklist_sections from the server #}
+<section class="checklist-reminder">
+  <h2 class="summary-heading">Checklist reminder</h2>
+  <p class="muted small">Shared <strong>transport + accommodation</strong> lists apply when they match what you ticked. Edit them <strong>under Transport</strong> on this trip page.</p>
+  {% if checklist_sections and checklist_sections|length > 0 %}
+  <div class="checklist-sections">
+    {% for s in checklist_sections %}
+    <div class="checklist-block">
+      <h3 class="checklist-block-title">{{ s.title }}</h3>
+      <p class="checklist-block-sub muted small">{{ s.subtitle }}</p>
+      <div class="checklist-body">{{ s.body }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted checklist-reminder-empty">No matching pair checklists yet. Tick transport and accommodation, save the plan, then edit each pair’s list under <strong>Transport</strong> (e.g. <strong>Ute + Caravan</strong>).</p>
+  {% endif %}
+</section>

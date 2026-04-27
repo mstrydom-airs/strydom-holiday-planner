@@ -1,0 +1,14 @@
+{# holiday_type_options, plan #}
+{% set selected_holiday_types = plan.holiday_types|default([]) if plan else [] %}
+<div class="holiday-type-select">
+  <label class="field">
+    <span>Activity Type</span>
+    <select name="holiday_types">
+      <option value="">Choose activity type…</option>
+    {% for opt in holiday_type_options %}
+      <option value="{{ opt }}" {% if opt in selected_holiday_types %}selected{% endif %}>{{ opt }}</option>
+    {% endfor %}
+    </select>
+  </label>
+  <p class="muted small">Track the main activity or stay style for this destination, such as a show, movie, caravan trip, timeshare, Accor, or hotel.</p>
+</div>

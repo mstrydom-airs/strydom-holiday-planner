@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Weekend — Strydom Travel Hub{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Weekend</h1>
+  <div class="page-head-body">
+    <img class="page-head-image" src="{{ url_for('static', filename='img/coastal-postcard.svg') }}" alt="Sunny weekend beach scene">
+    <p class="muted">Set a start and end date, pick accommodation and transport, then outline your itinerary and notes.</p>
+  </div>
+</section>
+
+{% set trip_type = 'weekend' %}
+{% include 'partials/trip_type_select.html' %}
+
+{% if plan and trip_id %}
+<form class="plan-form" method="post" action="">
+  <input type="hidden" name="trip_id" value="{{ trip_id }}">
+
+  <div class="form-section">
+    <h2>Trip details</h2>
+    <label class="field">
+      <span>Destination (optional)</span>
+      <input type="text" name="title" value="{{ plan.title if plan else '' }}" placeholder="e.g. Coast weekend">
+    </label>
+    {% include 'partials/holiday_type_section.html' %}
+    <div class="row two date-range-pair">
+      <label class="field">
+        <span>From</span>
+        <input class="date-from" type="date" name="start_date" value="{{ plan.start_date if plan else '' }}">
+      </label>
+      <label class="field">
+        <span>To</span>
+        <input class="date-to" type="date" name="end_date" value="{{ plan.end_date if plan else '' }}">
+      </label>
+    </div>
+  </div>
+
+  {% include 'partials/travelers_section.html' %}
+
+  {% include 'partials/accommodation_section.html' %}
+
+  {% include 'partials/transport_section.html' %}
+
+  {% include 'partials/things_to_do_section.html' %}
+
+  {% include 'partials/planner_calendar_section.html' %}
+
+  <div class="form-section">
+    <h2>Notes</h2>
+    <label class="field">
+      <span>General notes</span>
+      <textarea name="notes" rows="4" placeholder="Budget, packing, contacts…">{{ plan.notes if plan else '' }}</textarea>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save weekend plan</button>
+  </div>
+</form>
+
+{% include 'partials/checklist_form_anchors.html' %}
+
+<section class="summary">
+  <h2>Saved plan (this browser session)</h2>
+  <dl class="summary-dl">
+    <dt>Dates</dt><dd>{% if plan.start_date or plan.end_date %}{{ plan.start_date|fmt_dmy if plan.start_date else '…' }} → {{ plan.end_date|fmt_dmy if plan.end_date else '…' }}{% else %}—{% endif %}</dd>
+    <dt>Who's Having Fun</dt><dd>{{ travelers_display or '—' }}</dd>
+    <dt>Activity Type</dt><dd>{% if plan.holiday_types|default([]) | length %}{{ plan.holiday_types | join(', ') }}{% else %}—{% endif %}</dd>
+    <dt>Accommodation</dt><dd>{% if plan.accommodation %}{{ plan.accommodation | join(', ') }}{% endif %}{% if plan.accommodation_places %}{% if plan.accommodation %} — {% endif %}{{ plan.accommodation_places }}{% endif %}{% if not plan.accommodation and not plan.accommodation_places %}—{% endif %}</dd>
+    <dt>Transport</dt><dd>{% if plan.transport %}{{ plan.transport | join(', ') }}{% else %}—{% endif %}{% if plan.transport_extra %} — {{ plan.transport_extra }}{% endif %}</dd>
+    <dt>Things to do</dt><dd>{% if plan.things_to_do_picks|default([]) | length %}{{ plan.things_to_do_picks | join('; ') }}{% else %}—{% endif %}</dd>
+  </dl>
+</section>
+
+{% else %}
+<p class="muted">No weekend trips yet. Use <a href="{{ url_for('holiday_planning') }}">Plan a Holiday</a> to pick <strong>Start Holiday Plan</strong>, choose <strong>Weekend</strong>, then select or add a destination.</p>
+{% endif %}
+
+{% endblock %}

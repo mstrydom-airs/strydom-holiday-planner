@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Extended trip — Strydom Travel Hub{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Extended trip</h1>
+  <div class="page-head-body">
+    <img class="page-head-image" src="{{ url_for('static', filename='img/camping-lake.svg') }}" alt="Camping holiday beside a lake">
+    <p class="muted">Set an overall trip window, then add legs: each leg has its own destination, dates, and transport. The first leg starts on the overall <strong>From</strong> date; each new leg defaults to start where the previous leg ends (you can change any date).</p>
+  </div>
+</section>
+
+{% set trip_type = 'extended' %}
+{% include 'partials/trip_type_select.html' %}
+
+{% if plan and trip_id %}
+<form id="extended-form" class="plan-form" method="post" action="">
+  <input type="hidden" name="trip_id" value="{{ trip_id }}">
+
+  <div class="form-section">
+    <h2>Overall trip</h2>
+    <label class="field">
+      <span>Destination (optional)</span>
+      <input type="text" name="title" value="{{ plan.title if plan else '' }}" placeholder="e.g. Southern loop">
+    </label>
+    {% include 'partials/holiday_type_section.html' %}
+    <div class="row two date-range-pair">
+      <label class="field">
+        <span>From (optional)</span>
+        <input class="date-from" type="date" name="trip_start" value="{{ plan.trip_start if plan else '' }}">
+      </label>
+      <label class="field">
+        <span>To (optional)</span>
+        <input class="date-to" type="date" name="trip_end" value="{{ plan.trip_end if plan else '' }}">
+      </label>
+    </div>
+  </div>
+
+  {% include 'partials/travelers_section.html' %}
+
+  {% include 'partials/accommodation_section.html' %}
+
+  {% include 'partials/transport_section.html' %}
+
+  <div class="form-section">
+    <h2>Legs — destinations &amp; date ranges</h2>
+    <p class="muted small">Start with one leg; use <strong>Add leg</strong> for more stops. New legs start on the previous leg’s end date unless you change them.</p>
+
+    <div id="legs-container">
+      {% for leg in legs %}
+      <div class="leg-block">
+        <div class="leg-block-head">
+          <h3 class="leg-title">Leg <span class="leg-num">{{ loop.index }}</span></h3>
+          <button type="button" class="btn btn-ghost btn-remove-leg" {% if legs|length <= 1 %}hidden{% endif %}>Remove leg</button>
+        </div>
+        <label class="field">
+          <span>Destination</span>
+          <input type="text" name="leg_destination" value="{{ leg.destination if leg else '' }}" placeholder="City or region">
+        </label>
+        <div class="row two date-range-pair">
+          <label class="field">
+            <span>From</span>
+            <input class="date-from" type="date" name="leg_start" value="{{ leg.start_date if leg else '' }}">
+          </label>
+          <label class="field">
+            <span>To</span>
+            <input class="date-to" type="date" name="leg_end" value="{{ leg.end_date if leg else '' }}">
+          </label>
+        </div>
+        <label class="field">
+          <span>Transport for this leg</span>
+          <select name="leg_transport">
+            <option value="">—</option>
+            {% for opt in transport_options %}
+            <option value="{{ opt }}" {% if leg and leg.transport == opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+
+    <p class="add-leg-wrap">
+      <button type="button" id="add-leg" class="btn btn-secondary">Add leg</button>
+    </p>
+  </div>
+
+  <template id="leg-block-template">
+    <div class="leg-block">
+      <div class="leg-block-head">
+        <h3 class="leg-title">Leg <span class="leg-num">1</span></h3>
+        <button type="button" class="btn btn-ghost btn-remove-leg">Remove leg</button>
+      </div>
+      <label class="field">
+        <span>Destination</span>
+        <input type="text" name="leg_destination" value="" placeholder="City or region">
+      </label>
+      <div class="row two date-range-pair">
+        <label class="field">
+          <span>From</span>
+          <input class="date-from" type="date" name="leg_start" value="">
+        </label>
+        <label class="field">
+          <span>To</span>
+          <input class="date-to" type="date" name="leg_end" value="">
+        </label>
+      </div>
+      <label class="field">
+        <span>Transport for this leg</span>
+        <select name="leg_transport">
+          <option value="">—</option>
+          {% for opt in transport_options %}
+          <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+  </template>
+
+  {% include 'partials/things_to_do_section.html' %}
+
+  {% include 'partials/planner_calendar_section.html' %}
+
+  <div class="form-section">
+    <h2>Notes</h2>
+    <label class="field">
+      <span>General notes</span>
+      <textarea name="notes" rows="4" placeholder="Visas, gear, vehicle checks…">{{ plan.notes if plan else '' }}</textarea>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save extended trip</button>
+  </div>
+</form>
+
+{% include 'partials/checklist_form_anchors.html' %}
+
+<section class="summary">
+  <h2>Saved plan (this browser session)</h2>
+  <dl class="summary-dl">
+    <dt>Overall window</dt><dd>{% if plan.trip_start or plan.trip_end %}{{ plan.trip_start|fmt_dmy or '…' }} → {{ plan.trip_end|fmt_dmy or '…' }}{% else %}—{% endif %}</dd>
+    <dt>Who's Having Fun</dt><dd>{{ travelers_display or '—' }}</dd>
+    <dt>Activity Type</dt><dd>{% if plan.holiday_types|default([]) | length %}{{ plan.holiday_types | join(', ') }}{% else %}—{% endif %}</dd>
+    <dt>Accommodation</dt><dd>{% if plan.accommodation %}{{ plan.accommodation | join(', ') }}{% endif %}{% if plan.accommodation_places %}{% if plan.accommodation %} — {% endif %}{{ plan.accommodation_places }}{% endif %}{% if not plan.accommodation and not plan.accommodation_places %}—{% endif %}</dd>
+    <dt>Transport (overall)</dt><dd>{% if plan.transport_overall %}{{ plan.transport_overall | join(', ') }}{% else %}—{% endif %}{% if plan.transport_extra %} — {{ plan.transport_extra }}{% endif %}</dd>
+    <dt>Things to do</dt><dd>{% if plan.things_to_do_picks|default([]) | length %}{{ plan.things_to_do_picks | join('; ') }}{% else %}—{% endif %}</dd>
+  </dl>
+  {% if plan.legs %}
+  <h3 class="summary-sub">Legs</h3>
+  <ul class="leg-list">
+    {% for leg in plan.legs %}
+    <li>
+      <strong>{{ leg.destination or 'Destination' }}</strong>
+      — {{ leg.start_date or '?' }} → {{ leg.end_date or '?' }}
+      {% if leg.transport %}({{ leg.transport }}){% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+{% else %}
+<p class="muted">No extended trips yet. Use <a href="{{ url_for('holiday_planning') }}">Plan a Holiday</a> to pick <strong>Start Holiday Plan</strong>, choose <strong>Extended trip</strong>, then select or add a destination.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/extended-legs.js') }}"></script>
+{% endblock %}

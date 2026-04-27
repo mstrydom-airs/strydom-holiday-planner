@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 160" role="img" aria-labelledby="title desc">
+  <title id="title">Bright holiday badge</title>
+  <desc id="desc">A vibrant sun, palm tree, and colourful travel path.</desc>
+  <rect width="220" height="160" rx="30" fill="#22b8cf"/>
+  <circle cx="166" cy="42" r="28" fill="#ffd166"/>
+  <path d="M0 112 C42 84 72 126 116 98 C156 72 178 104 220 78 L220 160 L0 160 Z" fill="#fff0c2"/>
+  <path d="M0 128 C54 104 90 148 138 118 C174 96 194 122 220 110 L220 160 L0 160 Z" fill="#f59f00"/>
+  <path d="M56 138 C68 104 78 70 84 36" stroke="#7b4e2d" stroke-width="10" stroke-linecap="round"/>
+  <path d="M84 38 C52 30 28 40 14 62 C42 54 62 48 84 38 Z" fill="#2f9e44"/>
+  <path d="M86 36 C88 12 108 0 138 0 C120 16 104 28 86 36 Z" fill="#40c057"/>
+  <path d="M86 38 C118 26 148 32 166 54 C136 50 110 46 86 38 Z" fill="#2f9e44"/>
+  <path d="M114 130 C132 104 154 92 180 92" fill="none" stroke="#e03131" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 14"/>
+  <circle cx="114" cy="130" r="8" fill="#e03131"/>
+  <circle cx="180" cy="92" r="8" fill="#e03131"/>
+</svg>

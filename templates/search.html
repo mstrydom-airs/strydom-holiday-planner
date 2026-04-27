@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Search — Strydom Travel Hub{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Search</h1>
+  <div class="page-head-body">
+    <img class="page-head-image" src="{{ url_for('static', filename='img/planning-desk.svg') }}" alt="Holiday planning desk with map">
+    <p class="muted">Find trips by any word or phrase (notes, places, people, planner days, legs, etc.). Matching trips use the same layout as Home.</p>
+  </div>
+</section>
+
+<form class="search-form" method="get" action="{{ url_for('search') }}" role="search">
+  <label class="field search-field-row">
+    <span class="visually-hidden">Search</span>
+    <input class="search-input" type="search" name="q" value="{{ query }}" placeholder="e.g. caravan, Noah, hotel name, dates…" autocomplete="off" autofocus>
+    <button type="submit" class="btn btn-primary">Search</button>
+  </label>
+</form>
+
+{% if has_query %}
+<section class="holiday-summary search-glance">
+  <h2 class="summary-heading">Matching trips</h2>
+  {% if day_trip_matches or weekend_matches or long_weekend_matches or extended_matches %}
+  <ul class="glance-trips">
+    {% for row in day_trip_matches %}
+    <li class="glance-item">
+      <div class="glance-row">
+        <a href="{{ url_for('day_trip', trip=row.plan.id) }}" class="glance-link glance-link-block">
+          <span class="glance-type">Day trip</span>
+          <span class="glance-detail">{{ row.plan.title or 'Trip' }} — {% if row.plan.start_date %}{{ row.plan.start_date|fmt_dmy }}{% else %}…{% endif %}</span>
+          {% if row.travelers %}
+          <span class="glance-people">Who's Having Fun: {{ row.travelers }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </li>
+    {% endfor %}
+    {% for row in weekend_matches %}
+    <li class="glance-item">
+      <div class="glance-row">
+        <a href="{{ url_for('weekend', trip=row.plan.id) }}" class="glance-link glance-link-block">
+          <span class="glance-type">Weekend</span>
+          <span class="glance-detail">{{ row.plan.title or 'Trip' }} — {% if row.plan.start_date or row.plan.end_date %}{{ row.plan.start_date|fmt_dmy if row.plan.start_date else '…' }} → {{ row.plan.end_date|fmt_dmy if row.plan.end_date else '…' }}{% else %}…{% endif %}</span>
+          {% if row.travelers %}
+          <span class="glance-people">Who's Having Fun: {{ row.travelers }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </li>
+    {% endfor %}
+    {% for row in long_weekend_matches %}
+    <li class="glance-item">
+      <div class="glance-row">
+        <a href="{{ url_for('long_weekend', trip=row.plan.id) }}" class="glance-link glance-link-block">
+          <span class="glance-type">Long weekend</span>
+          <span class="glance-detail">{{ row.plan.title or 'Trip' }} — {% if row.plan.start_date or row.plan.end_date %}{{ row.plan.start_date|fmt_dmy if row.plan.start_date else '…' }} → {{ row.plan.end_date|fmt_dmy if row.plan.end_date else '…' }}{% else %}…{% endif %}</span>
+          {% if row.travelers %}
+          <span class="glance-people">Who's Having Fun: {{ row.travelers }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </li>
+    {% endfor %}
+    {% for row in extended_matches %}
+    <li class="glance-item glance-extended">
+      <div class="glance-row">
+        <a href="{{ url_for('extended', trip=row.plan.id) }}" class="glance-link glance-link-block">
+          <span class="glance-type">Extended trip</span>
+          <span class="glance-detail">{{ row.plan.title or 'Trip' }}{% if row.plan.trip_start or row.plan.trip_end %} — {{ row.plan.trip_start|fmt_dmy if row.plan.trip_start else '…' }} → {{ row.plan.trip_end|fmt_dmy if row.plan.trip_end else '…' }}{% endif %}</span>
+          {% if row.travelers %}
+          <span class="glance-people">Who's Having Fun: {{ row.travelers }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted glance-empty">No trips matched “{{ query }}”.</p>
+  {% endif %}
+  {% if other_matches and not trip_any %}
+  <p class="muted small search-other-note">No trip matched, but your search appears in a <strong>saved checklist</strong> (under Transport on a trip plan) or in sticky things to do.</p>
+  {% elif other_matches and trip_any %}
+  <p class="muted small search-other-note">Your search also matched text in saved checklists or the sticky things-to-do list.</p>
+  {% endif %}
+</section>
+{% else %}
+<p class="muted small">Enter a word or phrase to see trips that contain it anywhere in the saved plan.</p>
+{% endif %}
+{% endblock %}

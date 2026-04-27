@@ -1,0 +1,6 @@
+{# Empty forms outside plan-form — controls use form="pair-checklist-N" (HTML5). checklist_pair_rows #}
+{% if checklist_pair_rows and checklist_pair_rows|length > 0 %}
+{% for row in checklist_pair_rows %}
+<form id="pair-checklist-{{ loop.index0 }}" method="post" action="{{ url_for('save_checklist') }}" hidden aria-hidden="true"></form>
+{% endfor %}
+{% endif %}

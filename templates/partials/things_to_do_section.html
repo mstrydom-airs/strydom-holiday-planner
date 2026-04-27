@@ -1,0 +1,56 @@
+{# things_to_do_options, things_library, plan, trip_kind #}
+{% set td_picks = plan.things_to_do_picks|default([]) if plan else [] %}
+{% set lib = things_library|default([]) %}
+<div class="form-section">
+  <h2>Things to do</h2>
+  <p class="muted small">Use the <strong>Standard</strong> tab for common activities. Each <strong>manually added</strong> idea has its own tab. Add new ideas at the bottom—they are saved for this trip length.</p>
+
+  {% if lib and lib|length > 0 %}
+  <div class="things-to-do-tabs">
+    <div class="things-tablist" role="tablist" aria-label="Things to do">
+      <button type="button" class="things-tab is-active" role="tab" aria-selected="true" id="things-tab-0" aria-controls="things-panel-0">Standard</button>
+      {% for item in lib %}
+      <button type="button" class="things-tab" role="tab" aria-selected="false" id="things-tab-{{ loop.index }}" aria-controls="things-panel-{{ loop.index }}" title="{{ item|e }}">{% if item|length > 34 %}{{ item[:34] }}…{% else %}{{ item }}{% endif %}</button>
+      {% endfor %}
+    </div>
+
+    <div id="things-panel-0" class="things-tabpanel" role="tabpanel" aria-labelledby="things-tab-0">
+      <div class="checkbox-grid">
+        {% for opt in things_to_do_options %}
+        <label class="check">
+          <input type="checkbox" name="things_to_do" value="{{ opt }}"
+            {% if opt in td_picks %}checked{% endif %}>
+          <span>{{ opt }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% for item in lib %}
+    <div id="things-panel-{{ loop.index }}" class="things-tabpanel" role="tabpanel" hidden aria-labelledby="things-tab-{{ loop.index }}">
+      <p class="muted small things-manual-intro">Toggle this idea for this trip. (Saved under this tab for next time.)</p>
+      <label class="check things-manual-tab">
+        <input type="checkbox" name="things_to_do" value="libidx:{{ loop.index0 }}"
+          {% if item in td_picks %}checked{% endif %}>
+        <span>{{ item }}</span>
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="checkbox-grid">
+    {% for opt in things_to_do_options %}
+    <label class="check">
+      <input type="checkbox" name="things_to_do" value="{{ opt }}"
+        {% if opt in td_picks %}checked{% endif %}>
+      <span>{{ opt }}</span>
+    </label>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <label class="field things-add-field">
+    <span>Add another (saved for this trip length next time)</span>
+    <input type="text" name="things_to_do_new" placeholder="e.g. Kite surfing, winery tour…" autocomplete="off">
+  </label>
+</div>

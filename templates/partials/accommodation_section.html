@@ -1,0 +1,18 @@
+{# accommodation_checkboxes, plan #}
+<div class="form-section">
+  <h2>Accommodation</h2>
+  <p class="muted small">Select types, then add hotel or other named places in the box below.</p>
+  <div class="checkbox-grid">
+    {% for opt in accommodation_checkboxes %}
+    <label class="check">
+      <input type="checkbox" name="accommodation" value="{{ opt }}"
+        {% if plan and opt in (plan.accommodation|default([])) %}checked{% endif %}>
+      <span>{{ opt }}</span>
+    </label>
+    {% endfor %}
+  </div>
+  <label class="field">
+    <span>Hotel / named places</span>
+    <textarea name="accommodation_places" rows="2" placeholder="e.g. Grand Pacific Hotel, Airbnb on Smith St…">{{ plan.accommodation_places if plan else '' }}</textarea>
+  </label>
+</div>

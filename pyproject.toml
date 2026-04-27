@@ -1,0 +1,140 @@
+# Project tooling configuration for Strydom Travel Hub (Trip Planner).
+# All formatter / linter / type / test / coverage / mutation tools read from here.
+# See .cursor/rules/project-standards.mdc for the full standards this enforces.
+
+[project]
+name = "trip-planner"
+version = "0.1.0"
+description = "Strydom Travel Hub — a small Flask app for planning weekends and trips."
+requires-python = ">=3.11"
+
+# ---------------------------------------------------------------------------
+# Black — code formatter (line length 100).
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.venv
+  | __pycache__
+  | docs/_build
+)/
+'''
+
+# ---------------------------------------------------------------------------
+# isort — import sorter (Black-compatible profile).
+# ---------------------------------------------------------------------------
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = ["app", "trip_planner"]
+
+# ---------------------------------------------------------------------------
+# Ruff — fast linter (and complexity checker).
+# Rules align with .cursor/rules/project-standards.mdc §2.
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "docs/_build", "__pycache__"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",   # pycodestyle / pyflakes
+    "I",             # isort
+    "B",             # flake8-bugbear
+    "C90",           # mccabe complexity
+    "N",             # pep8-naming
+    "UP",            # pyupgrade
+    "S",             # flake8-bandit
+    "SIM",           # flake8-simplify
+    "PL",            # pylint
+]
+ignore = [
+    "S101",  # asserts are fine in tests
+    "PLR0913",  # function args — handled separately by our 5-arg rule
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004"]  # allow asserts and magic numbers in tests
+
+[tool.ruff.lint.mccabe]
+# Cyclomatic complexity hard cap — see project-standards.mdc §3.
+max-complexity = 10
+
+# ---------------------------------------------------------------------------
+# mypy — strict typing for application code.
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+files = ["app", "database.py"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false  # test fixtures often use implicit types
+
+# ---------------------------------------------------------------------------
+# pytest — test runner.
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=app",
+    "--cov=database",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-report=html:docs/reports/coverage_html",
+    "--cov-report=xml:docs/reports/coverage.xml",
+    "--cov-fail-under=80",
+]
+markers = [
+    "smoke: end-to-end smoke tests for top-level user flows",
+    "integration: tests that hit the Flask client / DB",
+    "slow: tests that take more than ~1 second",
+]
+
+# ---------------------------------------------------------------------------
+# Coverage — line and branch.
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+branch = true
+source = ["app", "database"]
+omit = [
+    "*/__init__.py",
+    "*/migrations/*",
+    "tests/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.coverage.html]
+directory = "docs/reports/coverage_html"
+
+# ---------------------------------------------------------------------------
+# mutmut — mutation testing.
+# Mutation score target ≥ 70% — see project-standards.mdc §7.
+# ---------------------------------------------------------------------------
+[tool.mutmut]
+paths_to_mutate = "app/,database.py"
+runner = "python -m pytest -x -q"
+tests_dir = "tests/"
+backup = false

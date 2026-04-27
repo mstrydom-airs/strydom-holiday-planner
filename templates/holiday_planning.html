@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Plan a Holiday — Strydom Travel Hub{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <h1 class="hero-title">Plan a Holiday</h1>
+    <p class="hero-lead">Choose a destination and trip length, then open a blank plan, reuse a name, or <strong>duplicate</strong> a saved plan—set dates on the trip page.</p>
+  </div>
+  <img class="hero-image" src="{{ url_for('static', filename='img/planning-desk.svg') }}" alt="Holiday planning desk with a map and suitcase">
+</section>
+
+<div class="plan-holiday-panel form-section">
+  <h2 class="summary-heading">Start Holiday Plan</h2>
+  <p class="muted small">Duplicate copies travellers, transport, and notes; dates clear for the new trip. The new-name field only appears for <strong>＋ New destination…</strong></p>
+  <div class="row two plan-holiday-fields">
+    <label class="field">
+      <span>Choose a destination</span>
+      <select id="open-trip" aria-label="Choose a destination">
+        <option value="">Choose…</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>Trip length</span>
+      <select id="open-kind" class="trip-kind-select" aria-label="Trip length (for new plans)">
+        <option value="day_trip">Day trip</option>
+        <option value="weekend">Weekend</option>
+        <option value="long_weekend">Long weekend</option>
+        <option value="extended">Extended trip</option>
+      </select>
+    </label>
+  </div>
+  <label class="field open-new-title-wrap" id="open-new-title-wrap" hidden>
+    <span>New destination</span>
+    <input type="text" id="open-new-title" placeholder="e.g. Coast break, Easter loop…" autocomplete="off">
+  </label>
+  <p class="form-actions">
+    <button type="button" class="btn btn-primary" id="open-plan-btn">Open plan</button>
+  </p>
+</div>
+
+<script type="application/json" id="plans-by-kind-data">{{ plans_by_kind|tojson }}</script>
+<script>
+(function () {
+  var dataEl = document.getElementById("plans-by-kind-data");
+  var kindSel = document.getElementById("open-kind");
+  var tripSel = document.getElementById("open-trip");
+  var newWrap = document.getElementById("open-new-title-wrap");
+  var newInput = document.getElementById("open-new-title");
+  var btn = document.getElementById("open-plan-btn");
+  if (!dataEl || !kindSel || !tripSel || !btn) return;
+
+  var plansData = JSON.parse(dataEl.textContent);
+  var allTrips = plansData.all_trips || [];
+  var destNames = plansData.destination_names || [];
+  var routes = {
+    day_trip: {{ url_for('day_trip')|tojson }},
+    weekend: {{ url_for('weekend')|tojson }},
+    long_weekend: {{ url_for('long_weekend')|tojson }},
+    extended: {{ url_for('extended')|tojson }}
+  };
+  var PREFIX_DUP = "duplicate:";
+
+  function fillTripOptions() {
+    tripSel.innerHTML = "";
+    var opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "Choose…";
+    tripSel.appendChild(opt0);
+    var optNew = document.createElement("option");
+    optNew.value = "new";
+    optNew.textContent = "＋ New destination…";
+    tripSel.appendChild(optNew);
+    if (destNames.length) {
+      var ogDest = document.createElement("optgroup");
+      ogDest.label = "New plan — destination name only";
+      destNames.forEach(function (title) {
+        var o = document.createElement("option");
+        o.value = "newdest:" + encodeURIComponent(title);
+        o.textContent = title;
+        ogDest.appendChild(o);
+      });
+      tripSel.appendChild(ogDest);
+    }
+    if (allTrips.length) {
+      var ogDup = document.createElement("optgroup");
+      ogDup.label = "Duplicate saved plan";
+      allTrips.forEach(function (row) {
+        var o = document.createElement("option");
+        o.value = PREFIX_DUP + row.kind + ":" + row.id;
+        o.textContent = row.label;
+        ogDup.appendChild(o);
+      });
+      tripSel.appendChild(ogDup);
+    }
+    newWrap.hidden = true;
+    newInput.value = "";
+  }
+
+  function parseDuplicateValue(v) {
+    if (v.indexOf(PREFIX_DUP) !== 0) return null;
+    var rest = v.slice(PREFIX_DUP.length);
+    var i = rest.indexOf(":");
+    if (i < 0) return null;
+    return { kind: rest.slice(0, i), tripId: rest.slice(i + 1) };
+  }
+
+  function onTripChange() {
+    var v = tripSel.value;
+    var showNew = v === "new";
+    newWrap.hidden = !showNew;
+    if (showNew) {
+      newInput.focus();
+      return;
+    }
+    if (v.indexOf("newdest:") === 0) {
+      return;
+    }
+    var dup = parseDuplicateValue(v);
+    if (dup && routes[dup.kind]) {
+      kindSel.value = dup.kind;
+      return;
+    }
+  }
+
+  tripSel.addEventListener("change", onTripChange);
+
+  fillTripOptions();
+
+  btn.addEventListener("click", function () {
+    var v = tripSel.value;
+    if (v === "new") {
+      var k = kindSel.value;
+      var base = routes[k];
+      if (!base) return;
+      var t = (newInput.value || "").trim();
+      window.location.href = base + "?new=1&title=" + encodeURIComponent(t);
+      return;
+    }
+    if (v.indexOf("newdest:") === 0) {
+      var title = decodeURIComponent(v.slice(8));
+      var k2 = kindSel.value;
+      var base2 = routes[k2];
+      if (base2) window.location.href = base2 + "?new=1&title=" + encodeURIComponent(title);
+      return;
+    }
+    var dup = parseDuplicateValue(v);
+    if (dup) {
+      var base3 = routes[dup.kind];
+      if (base3) window.location.href = base3 + "?duplicate=1&from=" + encodeURIComponent(dup.tripId);
+      return;
+    }
+  });
+})();
+</script>
+{% endblock %}

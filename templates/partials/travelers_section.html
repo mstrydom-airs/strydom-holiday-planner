@@ -1,0 +1,18 @@
+{# Requires: traveler_options, plan #}
+<div class="form-section">
+  <h2>Who's Having Fun</h2>
+  <p class="muted small">Tick who is coming. Each option is separate. Add extra names or notes in the box if you need to.</p>
+  <div class="checkbox-grid">
+    {% for v, label in traveler_options %}
+    <label class="check">
+      <input type="checkbox" name="travelers" value="{{ v }}"
+        {% if plan and v in (plan.travelers|default([])) %}checked{% endif %}>
+      <span>{{ label }}</span>
+    </label>
+    {% endfor %}
+  </div>
+  <label class="field">
+    <span>Other fun people (names or notes)</span>
+    <input type="text" name="travelers_other" value="{{ plan.travelers_other if plan else '' }}" placeholder="e.g. extra guests, pet…">
+  </label>
+</div>

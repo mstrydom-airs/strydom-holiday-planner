@@ -1,0 +1,24 @@
+{# trip_kind, checklist_pair_rows — uses form= attribute so no nested forms inside plan-form #}
+<div class="transport-checklist-editor">
+  <h3 class="transport-checklist-title">Shared checklists</h3>
+  <p class="muted small">One list per <strong>transport + accommodation</strong> pair you ticked above (and in Accommodation). The same shared lists apply to <strong>all trip types</strong> (day trip, weekend, long weekend, extended). When you save, checklist items are numbered automatically.</p>
+  {% if checklist_pair_rows and checklist_pair_rows|length > 0 %}
+  {% for row in checklist_pair_rows %}
+  <input type="hidden" name="return_to" value="{{ trip_kind }}" form="pair-checklist-{{ loop.index0 }}">
+  {% if trip_id %}
+  <input type="hidden" name="trip_id" value="{{ trip_id }}" form="pair-checklist-{{ loop.index0 }}">
+  {% endif %}
+  <input type="hidden" name="pair_transport" value="{{ row.transport }}" form="pair-checklist-{{ loop.index0 }}">
+  <input type="hidden" name="pair_accommodation" value="{{ row.accommodation }}" form="pair-checklist-{{ loop.index0 }}">
+  <div class="pair-checklist-fields">
+    <label class="field">
+      <span>{{ row.transport }} + {{ row.accommodation }}</span>
+      <textarea name="checklist_content" form="pair-checklist-{{ loop.index0 }}" rows="6" placeholder="1. Towels&#10;2. Pegs&#10;3. Book site">{{ row.content }}</textarea>
+    </label>
+    <button type="submit" class="btn btn-secondary" form="pair-checklist-{{ loop.index0 }}">Save this checklist</button>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="muted small transport-checklist-hint">After you tick at least one transport and one accommodation, <strong>save this trip plan</strong>. Your shared checklists for each combination will appear here, with any text you saved before.</p>
+  {% endif %}
+</div>

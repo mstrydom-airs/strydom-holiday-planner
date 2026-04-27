@@ -1,0 +1,34 @@
+# Development, testing, docs, and quality dependencies.
+# Install with:  pip install -r requirements-dev.txt
+# Runtime deps live in requirements.txt — keep them separate.
+
+# ----- Formatting / linting / typing -----
+black==24.10.0
+isort==5.13.2
+ruff==0.7.4
+mypy==1.13.0
+pre-commit==4.0.1
+
+# ----- Testing -----
+pytest==8.3.3
+pytest-cov==6.0.0
+pytest-flask==1.3.0
+hypothesis==6.115.5
+
+# ----- Mutation testing -----
+mutmut==2.5.0
+
+# ----- Security scanning -----
+bandit==1.7.10
+pip-audit==2.7.3
+
+# ----- Documentation (Sphinx + sphinx-needs + Mermaid) -----
+sphinx==8.1.3
+sphinx-needs==4.2.0
+sphinxcontrib-mermaid==1.0.0
+sphinx-copybutton==0.5.2
+sphinx-rtd-theme==3.0.2
+myst-parser==4.0.0
+
+# ----- Misc dev helpers -----
+python-dotenv==1.0.1

@@ -1,0 +1,17 @@
+{# trip_type: 'home' | 'planning' | 'day_trip' | 'weekend' | 'long_weekend' | 'extended' #}
+<div class="trip-type-bar">
+  <label class="field trip-type-field">
+    <span>Start Holiday Plan</span>
+    <select class="trip-type-select" aria-label="Start holiday plan">
+      {% if trip_type == 'home' %}
+      <option value="" selected disabled>Choose plan…</option>
+      {% elif trip_type == 'planning' %}
+      <option value="" selected disabled>Choose trip to start…</option>
+      {% endif %}
+      <option value="{{ url_for('day_trip') }}" {% if trip_type == 'day_trip' %}selected{% endif %}>Day trip</option>
+      <option value="{{ url_for('weekend') }}" {% if trip_type == 'weekend' %}selected{% endif %}>Weekend</option>
+      <option value="{{ url_for('long_weekend') }}" {% if trip_type == 'long_weekend' %}selected{% endif %}>Long weekend</option>
+      <option value="{{ url_for('extended') }}" {% if trip_type == 'extended' %}selected{% endif %}>Extended trip</option>
+    </select>
+  </label>
+</div>

@@ -1,0 +1,310 @@
+---
+description: Trip Planner project standards — context, docs (Sphinx + sphinx-needs), Mermaid diagrams, testing, mutation testing, coverage, usability, style, security, workflow. Apply to every coding task.
+alwaysApply: true
+---
+
+# Trip Planner — Project Standards
+
+These standards apply to **every** coding task in this repo. If a request conflicts
+with these rules, surface the conflict and propose a fix that keeps the standards.
+
+---
+
+## 1. Project Context
+
+- **Stack:** Python 3.11+, Flask, SQLite (via `database.py`), Jinja2 templates, vanilla
+  HTML/CSS/JS in `static/` and `templates/`.
+- **Author:** Beginner Python programmer. Favour **clear, simple, well-commented code**
+  over clever one-liners. Explain the *why* in comments, not the *what*.
+- **Domain:** Travel/trip management — day trips, weekends, long weekends, extended
+  trips. Plans persist in SQLite (`travel_hub.db`) and/or Flask sessions.
+- **Target structure** (refactor toward this as the app grows):
+
+  ```text
+  trip_planner/
+    app/                # Flask app — blueprints, models, services
+      __init__.py       # create_app() factory
+      blueprints/
+      models/
+      services/
+      templates/        # move from top-level templates/ over time
+      static/
+    tests/              # pytest, mirrors app/ layout
+    docs/               # Sphinx + sphinx-needs
+    scripts/
+    .cursor/rules/
+    pyproject.toml
+    requirements.txt
+    requirements-dev.txt
+  ```
+
+---
+
+## 2. Coding Style
+
+- **Formatter:** Black (line length **100**). Never hand-format what Black formats.
+- **Imports:** isort (Black profile). Group: stdlib, third-party, local.
+- **Linter:** Ruff with rules `E,F,W,I,B,C90,N,UP,S,SIM,PL`. Treat warnings as errors.
+- **Types:** Type hints on all public functions/methods. `mypy --strict` for `app/`.
+- **Docstrings:** Google style. Every public module, class, and function has one.
+  Include a `Needs:` footer linking to sphinx-needs IDs (see §5).
+- **Naming:** `snake_case` functions/vars, `PascalCase` classes, `UPPER_SNAKE` constants.
+  No single-letter names except short loop indices.
+- **No globals**, no mutable default args, no bare `except:`, no `print()` in app code
+  (use `logging`).
+
+### Concrete example
+
+```python
+# BAD — bare except, mutable default, print, no types, no docstring
+def add_trip(trip, trips=[]):
+    try:
+        trips.append(trip)
+    except:
+        print("oops")
+    return trips
+
+# GOOD
+def add_trip(trip: Trip, trips: list[Trip] | None = None) -> list[Trip]:
+    """Append ``trip`` to ``trips`` and return the new list.
+
+    Needs: REQ-012, TEST-021
+    """
+    trips = list(trips) if trips else []
+    try:
+        trips.append(trip)
+    except (TypeError, ValueError) as exc:
+        logger.exception("Failed to add trip", extra={"trip_id": trip.id})
+        raise TripValidationError("Could not add trip") from exc
+    return trips
+```
+
+---
+
+## 3. File and Function Size Limits
+
+Hard limits — refactor before exceeding:
+
+| Item | Limit |
+|------|-------|
+| File length | **400 lines** (excluding docstrings/blank) |
+| Function length | **50 lines** |
+| Class length | **200 lines** |
+| Function arguments | **5** (use a dataclass/TypedDict if more) |
+| Cyclomatic complexity | **10** (Ruff `C901`) |
+| Nesting depth | **4** |
+| Module-level public symbols | **20** |
+
+`app.py` currently exceeds the file limit — split into blueprints/services as it
+changes. Any PR that touches an over-limit file must reduce its size.
+
+---
+
+## 4. Documentation — Sphinx + sphinx-needs
+
+All design documentation lives in `docs/` and is built with **Sphinx**. We use
+**sphinx-needs** for full traceability between requirements, architecture decisions,
+implementation, and tests.
+
+### Need types and ID prefixes
+
+| Type | Prefix | Purpose |
+|------|--------|---------|
+| Requirement | `REQ-` | What the system must do |
+| User story / usability | `UC-` | User-facing acceptance criteria |
+| Architecture decision | `ADR-` | Recorded design choices (one `.rst` per ADR) |
+| Specification | `SPEC-` | Detailed designs |
+| Implementation | `IMPL-` | Pointer to code (file + symbol) |
+| Test | `TEST-` | A pytest test case |
+
+### Traceability rules
+
+- Every `REQ-` links to ≥ 1 `SPEC-` and ≥ 1 `TEST-` via `links:`.
+- Every `ADR-` references the `REQ-`/`SPEC-` it serves and the `IMPL-` it produced.
+- Every `IMPL-` names the source file and symbol; code docstrings echo the ID in a
+  `Needs:` footer (see §2 example).
+- Every `TEST-` references the `pytest` node id (e.g. `tests/test_trips.py::test_add`).
+- The Sphinx build runs with `-W` (warnings as errors) and **fails** if any need has
+  a dangling/missing link.
+
+### Required Sphinx extensions
+
+`sphinx`, `sphinx-needs`, `sphinxcontrib-mermaid`, `sphinx-autodoc`, `sphinx-copybutton`,
+`myst-parser` (so we can author in Markdown where preferred).
+
+### Coverage of generated reports inside docs
+
+The Sphinx build embeds:
+
+- `coverage` HTML report (linked from `docs/reports/coverage.rst`)
+- `mutmut` HTML report (linked from `docs/reports/mutation.rst`)
+- pytest results / JUnit summary (linked from `docs/reports/tests.rst`)
+- `pip-audit` and `bandit` summaries (`docs/reports/security.rst`)
+
+---
+
+## 5. Architecture Diagrams — Mermaid
+
+- All architecture/sequence/ERD diagrams are authored as **Mermaid** in
+  `docs/diagrams/*.md` and embedded in Sphinx via `sphinxcontrib-mermaid`.
+- Maintain at minimum:
+  - **C4 context** diagram of the system
+  - **Container/component** diagram of the Flask app
+  - **ERD** of the SQLite schema
+  - **Sequence diagram** for each user-facing flow (plan a weekend, save a trip, …)
+- A code change that alters architecture **must** update the relevant diagram in the
+  same change set.
+
+Example block:
+
+````markdown
+```mermaid
+sequenceDiagram
+  actor User
+  User->>Flask: POST /trips
+  Flask->>Service: create_trip(payload)
+  Service->>SQLite: INSERT INTO trips ...
+  SQLite-->>Service: row id
+  Service-->>Flask: Trip
+  Flask-->>User: 201 Created
+```
+````
+
+---
+
+## 6. Requirements Management
+
+- Authoritative requirements live in `docs/requirements/*.rst` as `req` directives.
+- Each `REQ-` has: title, description, status (`draft|approved|implemented|verified`),
+  priority (`low|medium|high|critical`), source/owner.
+- Reference at least one `REQ-` in every commit message and PR description.
+- Changes to a `REQ-` require an `ADR-` if they break or substantially alter scope.
+
+---
+
+## 7. Testing — pytest, coverage, mutation
+
+### Framework and layout
+
+- **pytest** as the runner. Tests under `tests/`, mirroring `app/`.
+- File names `test_<module>.py`; test names `test_<unit>__<scenario>__<expected>`.
+- AAA pattern (Arrange / Act / Assert), one logical assertion per test.
+- Shared fixtures in `tests/conftest.py` (Flask test client, temp DB, factory data).
+- Use **hypothesis** for property-based tests where input space matters.
+
+### Coverage
+
+- `pytest-cov` with **line and branch** coverage.
+- Threshold: **≥ 80%** overall, enforced via `--cov-fail-under=80`.
+- New/changed code must have **≥ 90%** coverage on its module.
+- Exclusions live in `pyproject.toml` `[tool.coverage.*]` and must be justified by a
+  comment.
+
+### Mutation testing
+
+- **mutmut** runs against `app/` (and `database.py` until refactored).
+- **Mutation score ≥ 70%** overall; surviving mutants are either killed by new tests
+  or recorded with rationale in `docs/reports/mutation.rst`.
+- Run mutation testing at minimum on every PR that touches business logic.
+
+### Test types
+
+| Layer | Tool | Notes |
+|-------|------|-------|
+| Unit | pytest | Pure functions, services, models |
+| Integration | pytest + Flask test client | Routes, blueprints, DB |
+| Property | hypothesis | Parsers, validators, date math |
+| Smoke | pytest | One end-to-end happy-path test per flow |
+| Usability | manual + Lighthouse + axe | See §8 |
+
+---
+
+## 8. Usability Testing
+
+- Each user-facing feature has a `UC-###` need with acceptance criteria.
+- Manual usability checklist lives at `docs/usability/checklist.md`. Run it for any UI
+  change. It covers: task completion, error recovery, mobile responsiveness,
+  keyboard navigation, screen-reader labels.
+- Templates must meet **WCAG 2.1 AA**. Verify with `axe-core` (browser extension or
+  `pytest-axe`) and document results in `docs/reports/accessibility.rst`.
+- **Lighthouse** scores ≥ 90 for Performance, Accessibility, Best Practices, SEO on
+  every page in production mode.
+- Forms have visible labels, helpful error messages, and CSRF tokens.
+
+---
+
+## 9. Security
+
+- **Never** commit secrets. Configuration via env vars and `.env` (loaded with
+  `python-dotenv`); commit `.env.example` only.
+- All SQL goes through **parameterised queries** — never string concatenation/f-strings.
+- All forms use **Flask-WTF** with CSRF protection.
+- Validate and sanitise all user input at the boundary (WTForms validators / pydantic).
+- Set safe response headers (CSP, X-Frame-Options, Referrer-Policy) — use
+  `flask-talisman` or equivalent.
+- Run `pip-audit` and `bandit -r app/` in CI; both must pass.
+
+---
+
+## 10. Logging & Error Handling
+
+- Configure the standard `logging` module via `app.logger` / `logging.config.dictConfig`.
+- Structured log lines with timestamp, level, request id, and user (if any).
+- Define custom exception classes in `app/errors.py`; catch specific exceptions only.
+- Map exceptions to HTTP responses via Flask error handlers; never leak stack traces
+  to users.
+
+---
+
+## 11. Configuration & Dependencies
+
+- Runtime deps in `requirements.txt`; dev/test/docs deps in `requirements-dev.txt`.
+- Pin **all** versions (`==`); refresh deliberately, not incidentally.
+- Tool config (Black, Ruff, isort, mypy, pytest, coverage, mutmut) lives in
+  `pyproject.toml`.
+- Use `python-dotenv`; `Config` classes for `Development`, `Testing`, `Production`.
+
+---
+
+## 12. Git, Commits, and PR Workflow
+
+- **Conventional Commits**: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`,
+  `perf:`, `style:`, `build:`, `ci:`. Reference `REQ-`/`ADR-` IDs in the body.
+- One concern per PR. Every PR updates code **and** tests **and** docs together.
+- Pre-commit hooks enforce Black, isort, Ruff, mypy, and a Sphinx warning-free build
+  on changed `.rst`/`.md`.
+
+---
+
+## 13. Definition of Done
+
+A task is **not** complete until **every** box is checked:
+
+- [ ] Code passes Black, isort, Ruff, mypy with no warnings
+- [ ] File/function/complexity limits respected (§3)
+- [ ] Public APIs have Google-style docstrings with `Needs:` footers
+- [ ] Unit + integration tests added/updated; overall coverage ≥ 80%, changed
+      modules ≥ 90%
+- [ ] Mutation score ≥ 70% on changed modules (mutmut)
+- [ ] Sphinx docs updated; `sphinx-build -W` passes; sphinx-needs links resolve
+- [ ] Mermaid diagrams updated where architecture changed
+- [ ] `REQ-`/`ADR-` IDs referenced in commit and PR description
+- [ ] For UI changes: manual usability checklist + Lighthouse + axe results recorded
+- [ ] `pip-audit` and `bandit` clean
+- [ ] No secrets committed; `.env.example` reflects any new variables
+
+---
+
+## 14. Agent Workflow — How To Apply These Rules
+
+When taking on a task, the agent should:
+
+1. **Read the request and the relevant `REQ-`/`ADR-`** before editing.
+2. Plan the change in small steps; if it touches > 5 files or changes architecture,
+   surface a brief plan and proposed `ADR-` first.
+3. Make the smallest correct edit. Stay under the size limits in §3.
+4. Add or update tests in the same change. Run them locally where possible.
+5. Update `docs/` (requirements, ADRs, diagrams, reports) in the same change.
+6. Run through the §13 Definition of Done before declaring success.
+7. If a rule must be bent for a good reason, **say so explicitly** and link an
+   `ADR-` that records the exception.

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Resort pool holiday</title>
+  <desc id="desc">A colourful resort pool scene with umbrellas, sunshine, and palms.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#9be7ff"/>
+      <stop offset="1" stop-color="#fff0c2"/>
+    </linearGradient>
+    <linearGradient id="pool" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#22b8cf"/>
+      <stop offset="1" stop-color="#0ca678"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="420" rx="34" fill="url(#sky)"/>
+  <circle cx="600" cy="82" r="48" fill="#ffd43b"/>
+  <path d="M0 236 C120 210 210 248 340 222 C490 192 594 234 720 204 L720 420 L0 420 Z" fill="#ffd8a8"/>
+  <rect x="96" y="210" width="528" height="148" rx="54" fill="url(#pool)"/>
+  <path d="M140 260 C232 236 312 292 404 260 C484 232 542 274 592 250" fill="none" stroke="#e3fafc" stroke-width="12" stroke-linecap="round" opacity="0.75"/>
+  <path d="M154 194 L256 194 L205 120 Z" fill="#ff6b6b"/>
+  <path d="M256 194 L358 194 L307 120 Z" fill="#f59f00"/>
+  <path d="M256 194 V318" stroke="#7b4e2d" stroke-width="10" stroke-linecap="round"/>
+  <path d="M452 326 C466 266 480 206 492 144" stroke="#7b4e2d" stroke-width="14" stroke-linecap="round"/>
+  <path d="M492 146 C454 130 418 142 390 172 C426 166 460 160 492 146 Z" fill="#2f9e44"/>
+  <path d="M494 144 C492 102 518 70 564 50 C544 88 520 118 494 144 Z" fill="#40c057"/>
+  <path d="M494 146 C536 126 580 134 616 166 C576 160 536 154 494 146 Z" fill="#2f9e44"/>
+  <rect x="174" y="326" width="172" height="18" rx="9" fill="#fff4e6"/>
+</svg>

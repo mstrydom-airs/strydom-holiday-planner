@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Road trip through hills</title>
+  <desc id="desc">A winding road through green hills toward distant mountains.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#bceaf0"/>
+      <stop offset="1" stop-color="#fff4d7"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="420" rx="34" fill="url(#sky)"/>
+  <circle cx="118" cy="92" r="42" fill="#ffd166"/>
+  <path d="M0 212 L138 112 L282 220 L392 126 L558 228 L720 138 L720 420 L0 420 Z" fill="#7fc7a2"/>
+  <path d="M0 256 C120 190 238 234 340 206 C462 172 560 236 720 196 L720 420 L0 420 Z" fill="#4aa978"/>
+  <path d="M314 420 C340 352 350 292 346 246 C342 202 310 176 320 146 C330 116 388 110 402 154 C416 196 378 222 390 272 C402 324 454 360 492 420 Z" fill="#36485c"/>
+  <path d="M382 420 C370 358 370 302 376 254" stroke="#fff1d7" stroke-width="10" stroke-linecap="round" stroke-dasharray="34 28"/>
+  <rect x="102" y="292" width="176" height="72" rx="30" fill="#e58f3a"/>
+  <path d="M134 292 l36-42 h74 l34 42 Z" fill="#f6c46d"/>
+  <circle cx="148" cy="364" r="22" fill="#203247"/>
+  <circle cx="238" cy="364" r="22" fill="#203247"/>
+  <rect x="176" y="260" width="42" height="26" rx="6" fill="#d9f1f2"/>
+</svg>

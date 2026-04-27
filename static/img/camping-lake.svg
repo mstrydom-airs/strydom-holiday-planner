@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Camping by the lake</title>
+  <desc id="desc">A peaceful camping holiday beside a lake with mountains and stars.</desc>
+  <defs>
+    <linearGradient id="dusk" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#364fc7"/>
+      <stop offset="0.52" stop-color="#74c0fc"/>
+      <stop offset="1" stop-color="#fff3bf"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="420" rx="34" fill="url(#dusk)"/>
+  <circle cx="116" cy="76" r="34" fill="#fff9db"/>
+  <path d="M0 214 L126 104 L236 212 L348 88 L510 226 L634 132 L720 204 L720 420 L0 420 Z" fill="#5c7cfa"/>
+  <path d="M0 256 C112 224 218 250 320 228 C454 200 570 248 720 214 L720 420 L0 420 Z" fill="#2b8a3e"/>
+  <path d="M0 310 C138 282 250 326 376 294 C500 262 610 302 720 284 L720 420 L0 420 Z" fill="#1971c2"/>
+  <path d="M104 340 L196 218 L288 340 Z" fill="#ff922b"/>
+  <path d="M196 218 L288 340 H196 Z" fill="#f76707"/>
+  <path d="M196 218 V340" stroke="#7b341e" stroke-width="8"/>
+  <path d="M408 334 C424 282 434 230 444 174" stroke="#6b4226" stroke-width="12" stroke-linecap="round"/>
+  <path d="M444 176 C410 160 374 168 348 196 C382 190 414 184 444 176 Z" fill="#2f9e44"/>
+  <path d="M446 174 C446 132 472 100 518 82 C496 118 474 148 446 174 Z" fill="#37b24d"/>
+  <path d="M446 176 C488 158 530 166 562 198 C524 190 486 184 446 176 Z" fill="#2f9e44"/>
+  <circle cx="520" cy="52" r="4" fill="#fff9db"/>
+  <circle cx="574" cy="86" r="3" fill="#fff9db"/>
+  <circle cx="644" cy="58" r="4" fill="#fff9db"/>
+</svg>

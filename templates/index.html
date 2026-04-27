@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Home — Strydom Travel Hub{% endblock %}
+{% block content %}
+<section class="hero home-hero">
+  <div class="hero-copy">
+    <div class="home-heading-row">
+      <h1 class="hero-title">Strydom Travel Hub</h1>
+      <img class="home-heading-image" src="{{ url_for('static', filename='img/vibrant-holiday-badge.svg') }}" alt="Bright holiday travel badge">
+    </div>
+    <p class="hero-lead">Saved trips, soonest first. <a href="{{ url_for('holiday_planning') }}">Plan a Holiday</a> to add or duplicate a trip. Checklists live under <strong>Transport</strong> on each trip.</p>
+  </div>
+</section>
+
+<section class="holiday-summary">
+  <h2 class="summary-heading">At a glance</h2>
+  {% if glance_groups_sorted %}
+  {% include 'partials/glance_trips.html' %}
+  {% else %}
+  <p class="muted glance-empty">No trips yet. <a href="{{ url_for('holiday_planning') }}">Plan a Holiday</a> to start.</p>
+  {% endif %}
+</section>
+{% endblock %}

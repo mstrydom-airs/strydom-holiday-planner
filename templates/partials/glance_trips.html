@@ -1,0 +1,95 @@
+{# glance_groups_sorted: list of { kind, group: { label, trips, multiple } } — date order, soonest first #}
+<ul class="glance-trips">
+  {% for item in glance_groups_sorted %}
+  {% set kind = item.kind %}
+  {% set g = item.group %}
+  {% set label = 'Day trip' if kind == 'day_trip' else 'Weekend' if kind == 'weekend' else 'Long weekend' if kind == 'long_weekend' else 'Extended trip' %}
+  {% set endpoint = 'day_trip' if kind == 'day_trip' else 'weekend' if kind == 'weekend' else 'long_weekend' if kind == 'long_weekend' else 'extended' %}
+  {% if g.multiple %}
+  <li class="glance-item glance-subgroup-wrap">
+    <p class="glance-subgroup-heading">{{ g.label }} · {{ label }}</p>
+    <ul class="glance-subgroup-trips">
+      {% for plan in g.trips %}
+      <li class="glance-item {% if kind == 'extended' %}glance-extended{% endif %} glance-sub-item">
+        <div class="glance-row">
+          <a href="{{ url_for(endpoint, trip=plan.id) }}" class="glance-link glance-link-block">
+            <span class="glance-type">{{ label }}</span>
+            <span class="glance-detail">
+              {{ plan.title or 'Trip' }}
+              {% if kind == 'extended' and (plan.trip_start or plan.trip_end) %}
+              — {{ plan.trip_start|fmt_dmy if plan.trip_start else '…' }} → {{ plan.trip_end|fmt_dmy if plan.trip_end else '…' }}
+              {% elif kind == 'day_trip' %}
+              — {% if plan.start_date %}{{ plan.start_date|fmt_dmy }}{% else %}…{% endif %}
+              {% elif plan.start_date or plan.end_date %}
+              — {{ plan.start_date|fmt_dmy if plan.start_date else '…' }} → {{ plan.end_date|fmt_dmy if plan.end_date else '…' }}
+              {% else %}
+              — …
+              {% endif %}
+              {% if plan.legs and plan.legs|length > 0 %}
+              ({{ plan.legs|length }} stop{% if plan.legs|length != 1 %}s{% endif %})
+              {% endif %}
+            </span>
+            {% set tw = plan | glance_travelers %}
+            {% if tw %}<span class="glance-people">Who's Having Fun: {{ tw }}</span>{% endif %}
+            {% if plan.holiday_types|default([]) %}<span class="glance-people">Activity Type: {{ plan.holiday_types | join(', ') }}</span>{% endif %}
+          </a>
+          <form method="post" action="{{ url_for('delete_trip') }}" class="glance-delete-form" onsubmit="return confirm('Delete this trip?');">
+            <input type="hidden" name="trip_kind" value="{{ kind }}">
+            <input type="hidden" name="trip_id" value="{{ plan.id }}">
+            <button type="submit" class="btn btn-delete btn-trash" aria-label="Delete trip" title="Delete"><span class="trash-icon" aria-hidden="true">🗑</span></button>
+          </form>
+        </div>
+        {% if kind == 'extended' and plan.legs and plan.legs|length > 0 %}
+        <ul class="glance-legs">
+          {% for leg in plan.legs %}
+          <li class="glance-leg-line">{{ leg.destination or 'Stop' }} — {% if leg.start_date or leg.end_date %}{{ leg.start_date|fmt_dmy if leg.start_date else '…' }} → {{ leg.end_date|fmt_dmy if leg.end_date else '…' }}{% else %}…{% endif %}{% if leg.transport %} · {{ leg.transport }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% else %}
+  {% for plan in g.trips %}
+  <li class="glance-item {% if kind == 'extended' %}glance-extended{% endif %}">
+    <div class="glance-row">
+      <a href="{{ url_for(endpoint, trip=plan.id) }}" class="glance-link glance-link-block">
+        <span class="glance-type">{{ label }}</span>
+        <span class="glance-detail">
+          {{ plan.title or 'Trip' }}
+          {% if kind == 'extended' and (plan.trip_start or plan.trip_end) %}
+          — {{ plan.trip_start|fmt_dmy if plan.trip_start else '…' }} → {{ plan.trip_end|fmt_dmy if plan.trip_end else '…' }}
+          {% elif kind == 'day_trip' %}
+          — {% if plan.start_date %}{{ plan.start_date|fmt_dmy }}{% else %}…{% endif %}
+          {% elif plan.start_date or plan.end_date %}
+          — {{ plan.start_date|fmt_dmy if plan.start_date else '…' }} → {{ plan.end_date|fmt_dmy if plan.end_date else '…' }}
+          {% else %}
+          — …
+          {% endif %}
+          {% if plan.legs and plan.legs|length > 0 %}
+          ({{ plan.legs|length }} stop{% if plan.legs|length != 1 %}s{% endif %})
+          {% endif %}
+        </span>
+        {% set tw = plan | glance_travelers %}
+        {% if tw %}<span class="glance-people">Who's Having Fun: {{ tw }}</span>{% endif %}
+        {% if plan.holiday_types|default([]) %}<span class="glance-people">Activity Type: {{ plan.holiday_types | join(', ') }}</span>{% endif %}
+      </a>
+      <form method="post" action="{{ url_for('delete_trip') }}" class="glance-delete-form" onsubmit="return confirm('Delete this trip?');">
+        <input type="hidden" name="trip_kind" value="{{ kind }}">
+        <input type="hidden" name="trip_id" value="{{ plan.id }}">
+        <button type="submit" class="btn btn-delete btn-trash" aria-label="Delete trip" title="Delete"><span class="trash-icon" aria-hidden="true">🗑</span></button>
+      </form>
+    </div>
+    {% if kind == 'extended' and plan.legs and plan.legs|length > 0 %}
+    <ul class="glance-legs">
+      {% for leg in plan.legs %}
+      <li class="glance-leg-line">{{ leg.destination or 'Stop' }} — {% if leg.start_date or leg.end_date %}{{ leg.start_date|fmt_dmy if leg.start_date else '…' }} → {{ leg.end_date|fmt_dmy if leg.end_date else '…' }}{% else %}…{% endif %}{% if leg.transport %} · {{ leg.transport }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </li>
+  {% endfor %}
+  {% endif %}
+  {% endfor %}
+</ul>

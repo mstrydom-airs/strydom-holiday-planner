@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Holiday planning desk</title>
+  <desc id="desc">A map, suitcase tag, coffee, and route markers on a warm desk.</desc>
+  <rect width="720" height="420" rx="34" fill="#fff1d7"/>
+  <circle cx="602" cy="86" r="58" fill="#f6c46d" opacity="0.72"/>
+  <rect x="86" y="76" width="408" height="270" rx="24" fill="#fdfbf3" stroke="#d8c8b5" stroke-width="6"/>
+  <path d="M146 132 C210 170 248 102 316 142 C384 182 426 118 466 154" fill="none" stroke="#0e8f8c" stroke-width="12" stroke-linecap="round" stroke-dasharray="2 26"/>
+  <circle cx="146" cy="132" r="20" fill="#e58f3a"/>
+  <circle cx="316" cy="142" r="20" fill="#e58f3a"/>
+  <circle cx="466" cy="154" r="20" fill="#e58f3a"/>
+  <path d="M134 236 H440" stroke="#d8c8b5" stroke-width="8" stroke-linecap="round"/>
+  <path d="M134 278 H356" stroke="#d8c8b5" stroke-width="8" stroke-linecap="round"/>
+  <path d="M540 186 h92 a26 26 0 0 1 26 26 v84 a26 26 0 0 1-26 26 h-92 a26 26 0 0 1-26-26 v-84 a26 26 0 0 1 26-26Z" fill="#203247"/>
+  <path d="M560 186 v-22 a26 26 0 0 1 52 0 v22" fill="none" stroke="#203247" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="588" cy="253" r="30" fill="#26b6a9"/>
+  <path d="M586 238 v32 M570 254 h32" stroke="#fffaf2" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="566" cy="88" r="30" fill="#fffaf2"/>
+  <circle cx="566" cy="88" r="20" fill="#d48a55"/>
+  <path d="M596 84 h22 a16 16 0 0 1 0 32 h-18" fill="none" stroke="#fffaf2" stroke-width="10" stroke-linecap="round"/>
+</svg>

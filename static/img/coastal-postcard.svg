@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Sunny coastal holiday postcard</title>
+  <desc id="desc">A calm beach scene with sun, waves, and palm trees.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#8edce5"/>
+      <stop offset="0.62" stop-color="#f8dc9a"/>
+      <stop offset="1" stop-color="#fff3d8"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#2fb8b3"/>
+      <stop offset="1" stop-color="#0b6f8f"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="420" rx="34" fill="url(#sky)"/>
+  <circle cx="560" cy="92" r="48" fill="#ffd166"/>
+  <path d="M0 238 C116 202 205 250 316 220 C448 184 562 224 720 186 L720 420 L0 420 Z" fill="url(#sea)"/>
+  <path d="M0 292 C126 268 210 316 340 286 C492 250 584 300 720 266 L720 420 L0 420 Z" fill="#fff6df" opacity="0.9"/>
+  <path d="M0 340 C130 314 260 356 390 330 C526 303 614 340 720 318 L720 420 L0 420 Z" fill="#f1bd7a"/>
+  <path d="M132 330 C148 272 163 218 174 162" stroke="#7b4e2d" stroke-width="18" stroke-linecap="round"/>
+  <path d="M174 164 C126 144 86 151 54 186 C94 181 134 180 174 164 Z" fill="#2e8f5d"/>
+  <path d="M176 162 C170 116 194 80 242 54 C222 93 204 128 176 162 Z" fill="#359c64"/>
+  <path d="M176 164 C222 136 270 130 316 154 C266 160 220 164 176 164 Z" fill="#2e8f5d"/>
+  <path d="M178 166 C212 178 242 206 263 248 C229 229 200 202 178 166 Z" fill="#3daa6c"/>
+  <path d="M94 350 L176 296 L258 350 Z" fill="#fff8e9"/>
+  <path d="M176 296 L258 350 L258 368 L176 314 Z" fill="#df7f47"/>
+  <path d="M94 350 L176 296 L176 314 L94 368 Z" fill="#f5a35f"/>
+</svg>

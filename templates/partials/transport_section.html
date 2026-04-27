@@ -1,0 +1,21 @@
+{# transport_options, plan_transport_list, plan, trip_kind, checklist_pair_rows #}
+<div class="form-section">
+  <h2>Transport</h2>
+  <p class="muted small">How you travel (you can pick several).</p>
+  <div class="checkbox-grid">
+    {% for opt in transport_options %}
+    <label class="check">
+      <input type="checkbox" name="transport" value="{{ opt }}"
+        {% if opt in (plan_transport_list|default([])) %}checked{% endif %}>
+      <span>{{ opt }}</span>
+    </label>
+    {% endfor %}
+  </div>
+
+  {% include 'partials/transport_checklist_editor.html' %}
+
+  <label class="field">
+    <span>Other transport (anything extra)</span>
+    <textarea name="transport_extra" rows="3" placeholder="1. Hire car after flight&#10;2. Local bus">{{ plan.transport_extra if plan else '' }}</textarea>
+  </label>
+</div>
