@@ -1,6 +1,13 @@
-{# glance_groups_sorted: list of { kind, group: { label, trips, multiple } } — date order, soonest first #}
-<ul class="glance-trips">
-  {% for item in glance_groups_sorted %}
+{# glance_enriched: _all_glance_groups rows + glance_show_month_heading, glance_section_dom_id, glance_month_heading. glance_rail: GlanceRailItem with dom_id, label. #}
+<div class="glance-layout" data-glance-timeline>
+  <div class="glance-main">
+    <ul class="glance-trips">
+  {% for item in glance_enriched %}
+  {% if item.glance_show_month_heading %}
+  <li class="glance-item glance-month-item">
+    <h3 class="glance-month-heading" id="{{ item.glance_section_dom_id }}">{{ item.glance_month_heading }}</h3>
+  </li>
+  {% endif %}
   {% set kind = item.kind %}
   {% set g = item.group %}
   {% set label = 'Day trip' if kind == 'day_trip' else 'Weekend' if kind == 'weekend' else 'Long weekend' if kind == 'long_weekend' else 'Extended trip' %}
@@ -92,4 +99,16 @@
   {% endfor %}
   {% endif %}
   {% endfor %}
-</ul>
+    </ul>
+  </div>
+  <nav class="glance-rail" aria-label="Jump to month on At a glance list">
+    {% for r in glance_rail %}
+    <button
+      type="button"
+      class="glance-rail-item"
+      data-scroll-target="#{{ r.dom_id }}"
+      aria-controls="{{ r.dom_id }}"
+    >{{ r.label }}</button>
+    {% endfor %}
+  </nav>
+</div>

@@ -124,6 +124,23 @@ linked back to the ``REQ-`` they verify.
 
    ``tests/test_app_routes.py::test_search_route__empty_query_and_checklist_match__show_expected_messages``
 
+.. test:: Timeline section metadata and rail order
+   :id: TEST-016
+   :status: implemented
+   :links: IMPL-005
+   :verifies: REQ-005
+
+   ``tests/test_timeline.py`` (unit tests for ``glance_section_meta`` and
+   ``enrich_glance_timeline``).
+
+.. test:: Home At a glance shows month rail when trips exist
+   :id: TEST-017
+   :status: implemented
+   :links: IMPL-005
+   :verifies: REQ-005, UC-002
+
+   ``tests/test_smoke.py::test_home_page__glance_trips__shows_month_timeline_rail``
+
 .. needtable::
    :types: test
    :columns: id;title;status;verifies

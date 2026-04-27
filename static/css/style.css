@@ -184,6 +184,89 @@ body::before {
   color: var(--text);
 }
 
+/* At a glance: main column + sticky month rail (see glance-timeline.js) */
+.glance-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.glance-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.glance-rail {
+  position: sticky;
+  top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  max-height: min(70vh, 100%);
+  width: 5.5rem;
+  flex-shrink: 0;
+  padding: 0.2rem 0 0.2rem 0.35rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.glance-rail-item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.25rem 0.2rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-align: right;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-right: 2px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  font: inherit;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.glance-rail-item:hover,
+.glance-rail-item:focus-visible {
+  color: var(--text);
+  outline: none;
+  border-right-color: var(--border);
+}
+
+.glance-rail-item.is-active {
+  color: var(--accent);
+  font-weight: 600;
+  border-right-color: var(--accent);
+}
+
+.glance-item.glance-month-item {
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+
+.glance-month-heading {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  scroll-margin-top: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .glance-rail {
+    display: none;
+  }
+
+  .glance-layout {
+    gap: 0;
+  }
+}
+
 .glance-trips {
   margin: 0;
   padding: 0;

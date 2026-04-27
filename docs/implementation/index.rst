@@ -42,3 +42,14 @@ file and symbol; the corresponding source docstring echoes the ID in its
    ``app._sync_checklist_auto_headers``, ``app._normalize_checklist_text``,
    ``app._calendar_dates_for_plan``, ``app.search``, and
    ``app._trip_matches`` in ``app.py``.
+
+.. impl:: At a glance timeline service
+   :id: IMPL-005
+   :status: implemented
+   :links: SPEC-005
+   :implements: REQ-005
+
+   ``trip_planner.services.timeline.glance_section_meta`` and
+   ``trip_planner.services.timeline.enrich_glance_timeline`` in
+   ``trip_planner/services/timeline.py``. The ``home`` view in ``app.py`` passes
+   ``glance_enriched`` and ``glance_rail`` to ``templates/index.html``.

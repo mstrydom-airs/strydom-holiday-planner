@@ -11,12 +11,11 @@ import uuid
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, redirect, render_template, request, session, url_for
 
 from database import (
     count_trips,
     delete_all_trips,
-    delete_trip as db_delete_trip,
     ensure_trips_schema,
     fetch_plan,
     fetch_plans_for_kind,
@@ -24,7 +23,10 @@ from database import (
     register_db,
     upsert_trip,
 )
-
+from database import (
+    delete_trip as db_delete_trip,
+)
+from trip_planner.services.timeline import enrich_glance_timeline
 
 app = Flask(__name__)
 # Needed so Flask can sign session cookies (change in production).
@@ -745,7 +747,12 @@ def _trip_payload_common(trip_kind):
 @app.route("/")
 def home():
     glance = _all_glance_groups_sorted()
-    return render_template("index.html", glance_groups_sorted=glance)
+    glance_enriched, glance_rail = enrich_glance_timeline(glance)
+    return render_template(
+        "index.html",
+        glance_enriched=glance_enriched,
+        glance_rail=glance_rail,
+    )
 
 
 @app.route("/holiday-planning")

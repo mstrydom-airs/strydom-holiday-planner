@@ -17,8 +17,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# sphinx-needs 4.2.0 still references ``ast.NameConstant``. Python 3.14 removed
-# that alias, so keep local docs builds working until the pinned dependency moves.
+# sphinx-needs 4.x + Python 3.14: ``ast.NameConstant`` removed; keep the alias
+# for older import paths. Newer sphinx-needs (8.x) uses ``ast.Constant`` parsing.
 if not hasattr(ast, "NameConstant"):
     ast.NameConstant = ast.Constant  # type: ignore[attr-defined]
 
@@ -39,6 +39,8 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+# sphinx-needs 8.x deprecations until we migrate ``needs_extra_*`` to ``needs_fields``.
+suppress_warnings = ["needs.deprecated", "misc.copy_overwrite"]
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 html_theme = "sphinx_rtd_theme"

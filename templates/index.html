@@ -12,11 +12,17 @@
 </section>
 
 <section class="holiday-summary">
-  <h2 class="summary-heading">At a glance</h2>
-  {% if glance_groups_sorted %}
+  <h2 class="summary-heading" id="at-a-glance-heading">At a glance</h2>
+  {% if glance_enriched %}
   {% include 'partials/glance_trips.html' %}
   {% else %}
   <p class="muted glance-empty">No trips yet. <a href="{{ url_for('holiday_planning') }}">Plan a Holiday</a> to start.</p>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if glance_enriched and glance_rail|length > 0 %}
+  <script src="{{ url_for('static', filename='js/glance-timeline.js') }}"></script>
+  {% endif %}
 {% endblock %}

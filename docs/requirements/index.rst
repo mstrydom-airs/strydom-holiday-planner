@@ -67,3 +67,32 @@ linked to at least one specification (``SPEC-``) and one test (``TEST-``).
    The planning hub presents clear destination and trip-length controls, visible
    labels, holiday imagery, and copy that explains when dates will be set on the
    destination-specific trip page.
+
+.. req:: At a glance month timeline and rail
+   :id: REQ-005
+   :status: implemented
+   :priority: medium
+   :source: feature plan
+   :owner: Trip Planner maintainer
+   :tags: home; glance; timeline
+   :links: SPEC-005
+   :verifies: TEST-016, TEST-017
+
+   The home At a glance list groups saved trips by calendar month with section
+   headings, a sticky month rail (similar to Google Photos), scroll-synced
+   highlighting, and jump-to-month on click. Undated trips appear under an
+   Undated section at the end.
+
+.. uc:: At a glance month navigation
+   :id: UC-002
+   :status: implemented
+   :priority: medium
+   :source: feature plan
+   :owner: Trip Planner maintainer
+   :tags: home; accessibility; keyboard
+   :links: REQ-005
+   :verifies: TEST-017
+
+   Users can see which month they are viewing, use a vertical month rail to jump
+   to that month, and activate controls with the keyboard. On narrow viewports the
+   rail hides and month headings remain in the main column.

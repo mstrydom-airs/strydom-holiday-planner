@@ -43,3 +43,14 @@ Detailed designs that elaborate one or more requirements.
    transport/accommodation pair. Saved trip selections build an automatic header
    while preserving numbered user checklist items. ``app.search`` scans saved
    trip dictionaries plus reusable checklist and things-to-do session data.
+
+.. spec:: At a glance timeline service and layout
+   :id: SPEC-005
+   :status: implemented
+   :links: REQ-005
+
+   ``trip_planner.services.timeline`` maps ``sort_key`` values to month sections
+   and builds the ordered rail. ``templates/partials/glance_trips.html`` renders
+   the two-column layout; ``static/js/glance-timeline.js`` highlights the active
+   month; ``static/css/style.css`` styles the sticky rail (hidden below 640px
+   width).

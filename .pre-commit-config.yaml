@@ -35,11 +35,11 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: ["types-requests"]
-        files: ^(app/|database\.py)
+        files: ^(trip_planner/|database\.py)
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.10
     hooks:
       - id: bandit
-        args: ["-c", "pyproject.toml", "-r", "app", "database.py"]
+        args: ["-c", "pyproject.toml", "-r", "trip_planner", "database.py"]
         additional_dependencies: ["bandit[toml]"]

@@ -24,7 +24,7 @@ pip-audit==2.7.3
 
 # ----- Documentation (Sphinx + sphinx-needs + Mermaid) -----
 sphinx==8.1.3
-sphinx-needs==4.2.0
+sphinx-needs==8.0.0
 sphinxcontrib-mermaid==1.0.0
 sphinx-copybutton==0.5.2
 sphinx-rtd-theme==3.0.2

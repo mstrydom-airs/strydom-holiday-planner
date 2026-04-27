@@ -30,6 +30,27 @@ Container view
      end
      Routes --> Services --> Models --> DB[(SQLite)]
 
+At a glance home page
+---------------------
+
+.. mermaid::
+
+   sequenceDiagram
+     participant User
+     participant Browser
+     participant Flask
+     participant Timeline as trip_planner.timeline
+     participant Jinja
+     User->>Browser: open /
+     Browser->>Flask: GET /
+     Flask->>Flask: _all_glance_groups_sorted
+     Flask->>Timeline: enrich_glance_timeline
+     Timeline-->>Flask: enriched rows plus rail
+     Flask->>Jinja: render index + glance partial
+     Jinja-->>Browser: HTML with glance-layout
+     User->>Browser: scroll or click month rail
+     Browser->>Browser: IntersectionObserver and scrollIntoView
+
 Plan-a-holiday sequence
 -----------------------
 

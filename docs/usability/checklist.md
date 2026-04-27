@@ -8,6 +8,9 @@ back to the relevant `UC-` need.
 - [ ] A first-time user can complete the primary task on each page within 60s.
 - [ ] All buttons and links communicate their result before being clicked.
 - [ ] Forms keep entered data when validation fails.
+- [ ] (Home) With saved trips, month headings and the right-hand month rail
+      (if visible) make it clear which month is in view; rail buttons scroll to
+      the matching section (`UC-002`).
 
 ## Error recovery
 

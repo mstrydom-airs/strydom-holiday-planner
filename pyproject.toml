@@ -29,7 +29,7 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 100
-known_first_party = ["app", "trip_planner"]
+known_first_party = ["trip_planner"]
 
 # ---------------------------------------------------------------------------
 # Ruff — fast linter (and complexity checker).
@@ -73,7 +73,7 @@ strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 disallow_untyped_defs = true
-files = ["app", "database.py"]
+files = ["trip_planner", "database.py"]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
@@ -89,7 +89,7 @@ addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
-    "--cov=app",
+    "--cov=trip_planner",
     "--cov=database",
     "--cov-branch",
     "--cov-report=term-missing",
@@ -108,7 +108,7 @@ markers = [
 # ---------------------------------------------------------------------------
 [tool.coverage.run]
 branch = true
-source = ["app", "database"]
+source = ["trip_planner", "database"]
 omit = [
     "*/__init__.py",
     "*/migrations/*",
@@ -134,7 +134,7 @@ directory = "docs/reports/coverage_html"
 # Mutation score target ≥ 70% — see project-standards.mdc §7.
 # ---------------------------------------------------------------------------
 [tool.mutmut]
-paths_to_mutate = "app/,database.py"
+paths_to_mutate = "trip_planner/,database.py"
 runner = "python -m pytest -x -q"
 tests_dir = "tests/"
 backup = false
