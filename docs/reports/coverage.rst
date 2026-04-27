@@ -17,5 +17,16 @@ The build will fail if line+branch coverage drops below **80%** (see
 Latest summary
 --------------
 
-After running ``pytest`` locally, open
-``docs/reports/coverage_html/index.html`` for the interactive view.
+Latest command:
+``.\.venv\Scripts\python.exe -m pytest``
+
+Latest result:
+**80.79% total line/branch coverage**, satisfying the configured
+``--cov-fail-under=80`` gate.
+
+Module summary:
+
+* ``app.py``: 80%
+* ``database.py``: 88%
+
+Open ``docs/reports/coverage_html/index.html`` for the interactive view.

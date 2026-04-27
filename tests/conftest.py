@@ -37,16 +37,20 @@ def tmp_database_path() -> Iterator[Path]:
 
 
 @pytest.fixture
-def flask_client():  # type: ignore[no-untyped-def]
+def flask_client(tmp_database_path: Path, monkeypatch):  # type: ignore[no-untyped-def]
     """Return a Flask test client for the current ``app.py``.
 
     NOTE: ``app.py`` is currently a single module exposing ``app`` at module
     scope. Once we refactor to a ``create_app()`` factory, switch this fixture
     to use the factory plus a testing config.
+
+    Needs: REQ-001, REQ-002, REQ-003, REQ-004
     """
 
     import app as app_module  # imported lazily so collection still works without Flask
+    import database
 
+    monkeypatch.setattr(database, "_db_path", lambda: tmp_database_path)
     flask_app = app_module.app
     flask_app.config.update(TESTING=True)
     with flask_app.test_client() as client:

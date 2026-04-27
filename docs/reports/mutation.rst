@@ -19,4 +19,21 @@ below with a rationale.
 Surviving mutants — rationale log
 ---------------------------------
 
-* *(none yet)*
+Latest run status
+-----------------
+
+Command attempted:
+``$env:PYTHONUTF8='1'; .\.venv\Scripts\Activate.ps1; python -m mutmut run``
+
+Result:
+Blocked before mutant execution on Python 3.14. The baseline pytest command ran,
+but ``mutmut==2.5.0`` failed while preparing source-file line metadata through
+``pony`` with ``TypeError: cannot pickle 'itertools.count' object``.
+
+Follow-up:
+Run mutation testing under Python 3.11 or 3.12, matching the project standard
+runtime, or upgrade the pinned mutation tooling after validating compatibility.
+No mutation score is claimed for this run.
+
+Surviving mutants:
+*(not available because mutation execution did not start)*

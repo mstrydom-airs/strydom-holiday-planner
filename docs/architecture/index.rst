@@ -30,17 +30,27 @@ Container view
      end
      Routes --> Services --> Models --> DB[(SQLite)]
 
-Plan-a-weekend sequence
+Plan-a-holiday sequence
 -----------------------
 
 .. mermaid::
 
    sequenceDiagram
      actor User
-     User->>Browser: fills weekend form
-     Browser->>Flask: POST /weekend
-     Flask->>Services: save_weekend(payload)
-     Services->>SQLite: INSERT INTO weekend_plans ...
-     SQLite-->>Services: row id
-     Services-->>Flask: WeekendPlan
-     Flask-->>Browser: 302 /weekend/{id}
+     User->>Browser: chooses destination and trip length
+     Browser->>Flask: GET /holiday-planning
+     Flask->>SQLite: SELECT saved trips
+     SQLite-->>Flask: plans by holiday type
+     Flask-->>Browser: holiday hub with new/reuse/duplicate choices
+     User->>Browser: opens or duplicates a plan
+     Browser->>Flask: GET /weekend?new=1 or ?duplicate=1
+     Flask->>SQLite: INSERT OR REPLACE copied plan
+     Flask-->>Browser: 302 destination trip page
+
+Detailed holiday flow
+---------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   ../diagrams/holiday-planning

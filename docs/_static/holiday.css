@@ -1,0 +1,53 @@
+/* Holiday-themed polish for the Sphinx documentation. */
+:root {
+  --holiday-ocean: #0f6b7a;
+  --holiday-sky: #e8f7fb;
+  --holiday-sand: #fff3d6;
+  --holiday-coral: #d95f4c;
+  --holiday-ink: #24323a;
+}
+
+body {
+  color: var(--holiday-ink);
+}
+
+.wy-side-nav-search {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 243, 214, 0.95), transparent 28%),
+    linear-gradient(135deg, var(--holiday-ocean), #1592a6);
+}
+
+.wy-side-nav-search > a,
+.wy-side-nav-search .wy-dropdown > a {
+  color: #fff;
+  font-weight: 700;
+}
+
+.wy-nav-content {
+  background: linear-gradient(180deg, var(--holiday-sky), #fff 220px);
+}
+
+.rst-content h1,
+.rst-content h2,
+.rst-content h3 {
+  color: var(--holiday-ocean);
+}
+
+.rst-content h1 {
+  border-bottom: 4px solid var(--holiday-sand);
+  padding-bottom: 0.25rem;
+}
+
+.admonition,
+.need {
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 107, 122, 0.08);
+}
+
+.need {
+  border-left: 5px solid var(--holiday-coral);
+}
+
+.wy-menu-vertical a:hover {
+  background-color: rgba(255, 243, 214, 0.18);
+}
