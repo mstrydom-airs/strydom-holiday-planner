@@ -27,7 +27,7 @@
     </section>
 
     <section class="workspace-card">
-      <h2>Family tasks</h2>
+      <h2>Trip Tasks</h2>
       {% if plan.task_items %}
       <ul class="pack-list">
         {% for task in plan.task_items %}
@@ -50,11 +50,13 @@
 
     <section class="workspace-card">
       <h2>Budget</h2>
-      <p class="budget-total">Estimated total: ${{ '%.2f'|format(budget_total) }}</p>
-      {% if plan.budget_items %}
+      {% for currency, total in budget_totals.items() %}
+      <p class="budget-total">{{ currency }} {{ '{:,.2f}'.format(total) }}</p>
+      {% endfor %}
+      {% if budget_items %}
       <ul class="pack-list">
-        {% for item in plan.budget_items %}
-        <li>{{ item.category or 'Cost' }}: {{ item.description or 'Item' }}{% if item.amount %} · ${{ item.amount }}{% endif %}{% if item.paid %} · {{ item.paid }}{% endif %}</li>
+        {% for item in budget_items %}
+        <li>{{ item.description or item.category or 'Cost' }}{% if item.amount %} · {{ item.currency or 'AUD' }} {{ item.amount }}{% endif %} · {{ 'confirmed' if item.status == 'confirmed' else 'estimated' }}</li>
         {% endfor %}
       </ul>
       {% endif %}

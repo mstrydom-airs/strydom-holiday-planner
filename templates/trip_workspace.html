@@ -39,7 +39,7 @@
   <nav class="workspace-tabs" aria-label="Trip workspace sections">
     <button type="button" class="workspace-tab is-active" data-workspace-tab="overview">Overview</button>
     <button type="button" class="workspace-tab" data-workspace-tab="bookings">Bookings</button>
-    <button type="button" class="workspace-tab" data-workspace-tab="tasks" aria-label="Family Tasks">Tasks</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="tasks" aria-label="Trip Tasks">Tasks</button>
     <button type="button" class="workspace-tab" data-workspace-tab="packing">Packing</button>
     <button type="button" class="workspace-tab" data-workspace-tab="budget">Budget</button>
     <button type="button" class="workspace-tab" data-workspace-tab="documents" aria-label="Documents">Docs</button>
@@ -272,7 +272,7 @@
 
   <section class="workspace-panel" data-workspace-panel="tasks" hidden>
     <div class="workspace-card">
-      <h2>Family tasks</h2>
+      <h2>Trip Tasks</h2>
       <p class="muted small">Current checklist. Ticks save automatically.</p>
       <p class="task-autosave-status muted small" data-task-save-status aria-live="polite"></p>
       <div class="task-compact-list">
@@ -324,24 +324,31 @@
   <section class="workspace-panel" data-workspace-panel="budget" hidden>
     <div class="workspace-card">
       <h2>Budget</h2>
-      <p class="muted small">Taken from the cost on each booking.</p>
-      <p class="budget-total" data-budget-total>Total: ${{ '%.2f'|format(budget_total) }}</p>
-      {% if plan.booking_items|default([]) %}
+      <p class="muted small">Green costs are confirmed; red costs are researched estimates.</p>
+      <div class="budget-totals">
+        {% for currency, total in budget_totals.items() %}
+        <span>{{ currency }} {{ '{:,.2f}'.format(total) }}</span>
+        {% endfor %}
+      </div>
+      {% if budget_items %}
       <ul class="budget-extract">
-        {% for booking in plan.booking_items %}
-        {% if booking.name or booking.cost %}
-        <li class="budget-extract-line" data-budget-line>
-          <span>
-            {% if booking.date %}{{ booking.date|fmt_dmy }}{% endif %}
-            {{ booking.name or 'Booking' }}
+        {% for item in budget_items %}
+        {% if item.description or item.amount %}
+        <li class="budget-extract-line budget-{{ item.status or 'estimated' }}">
+          <span class="budget-line-copy">
+            <strong>{{ item.description or 'Cost' }}</strong>
+            {% if item.note %}<small>{{ item.note }}</small>{% endif %}
           </span>
-          <strong data-budget-amount>{% if booking.cost %}${{ '%.2f'|format(booking.cost|float) }}{% else %}No cost yet{% endif %}</strong>
+          <span class="budget-line-value">
+            <strong>{{ item.currency or 'AUD' }} {{ '{:,.2f}'.format(item.amount|float) }}</strong>
+            <small>{{ 'Confirmed' if item.status == 'confirmed' else 'Estimated' }}</small>
+          </span>
         </li>
         {% endif %}
         {% endfor %}
       </ul>
       {% else %}
-      <p class="muted small">No bookings yet. Add them under Bookings.</p>
+      <p class="muted small">No costs recorded yet.</p>
       {% endif %}
     </div>
   </section>
@@ -561,5 +568,5 @@
     document.querySelectorAll("[data-task-suggestion]:checked").forEach(window.tripTaskSuggestion);
   });
 </script>
-<script src="{{ url_for('static', filename='js/trip-workspace.js', v='mobile-workspace-4') }}"></script>
+<script src="{{ url_for('static', filename='js/trip-workspace.js', v='mobile-workspace-5') }}"></script>
 {% endblock %}

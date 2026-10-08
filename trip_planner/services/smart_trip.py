@@ -138,7 +138,78 @@ def normalise_workspace_plan(plan: dict[str, Any], kind: str) -> dict[str, Any]:
     plan.setdefault("packing_items", [])
     plan.setdefault("assistant_notes", "")
     plan.setdefault("important_links", [])
+    add_typical_trip_tasks(plan, kind)
     return plan
+
+
+def add_typical_trip_tasks(plan: dict[str, Any], kind: str) -> int:
+    """Add concise, relevant checklist items that are missing from a trip.
+
+    Args:
+        plan: Trip payload updated in place.
+        kind: Saved trip type, used to identify extended overseas travel.
+
+    Returns:
+        Number of checklist items added.
+
+    Needs: REQ-006, TEST-019
+    """
+
+    existing = {
+        str(task.get("text") or "").strip().lower() for task in plan.setdefault("task_items", [])
+    }
+    added = 0
+    for text in _typical_task_texts(plan, kind):
+        if text.lower() in existing:
+            continue
+        plan["task_items"].append(
+            {"owner": "", "text": text, "due": "", "status": "To do", "source": "auto"}
+        )
+        existing.add(text.lower())
+        added += 1
+    return added
+
+
+def _typical_task_texts(plan: dict[str, Any], kind: str) -> list[str]:
+    """Build checklist text from trip category, bookings, and transport."""
+
+    category = str(plan.get("plan_category") or "").lower()
+    title = str(plan.get("title") or "").lower()
+    booking_blob = " ".join(
+        f"{item.get('category', '')} {item.get('name', '')}"
+        for item in plan.get("booking_items") or []
+    ).lower()
+    transport_blob = " ".join(plan.get("transport_overall") or plan.get("transport") or []).lower()
+    tasks = [
+        "Confirm booking references and outstanding balances",
+        "Check weather and adjust packing",
+        "Save confirmations and emergency contacts offline",
+        "Pack medication, chargers and identification",
+    ]
+    if "flight" in booking_blob or "plane" in transport_blob:
+        tasks.extend(
+            ["Complete online check-in and save boarding passes", "Confirm baggage and transfers"]
+        )
+    if "accommodation" in booking_blob or any(
+        word in booking_blob for word in ("hotel", "resort", "caravan")
+    ):
+        tasks.append("Reconfirm check-in, check-out and room or site inclusions")
+    if "overseas" in category or ("flight" in booking_blob and kind == "extended"):
+        tasks.extend(
+            [
+                "Check passport validity and entry requirements",
+                "Arrange insurance, eSIM and payments",
+            ]
+        )
+    if "caravan" in category or "caravan" in booking_blob:
+        tasks.extend(["Check tyres, gas, water and power lead", "Confirm towing route and parking"])
+    if "tour" in booking_blob or "show" in booking_blob or "activity" in booking_blob:
+        tasks.append("Confirm timed tickets, venue and seats")
+    if "beach" in category or "beach" in title:
+        tasks.append("Pack sunscreen, hats and beach gear")
+    if "christmas" in title or "xmas" in title or "new year" in title:
+        tasks.append("Confirm celebration meals and supplies")
+    return tasks
 
 
 def assistant_suggestions(
@@ -217,6 +288,9 @@ def parse_booking_rows(form: Any) -> list[dict[str, str]]:
         "address": form.getlist("booking_address"),
         "notes": form.getlist("booking_notes"),
         "cost": form.getlist("booking_cost"),
+        "cost_currency": form.getlist("booking_cost_currency"),
+        "cost_status": form.getlist("booking_cost_status"),
+        "cost_note": form.getlist("booking_cost_note"),
     }
     count = max((len(values) for values in fields.values()), default=0)
     bookings = []
@@ -302,7 +376,7 @@ def budget_items_from_bookings(bookings: list[dict[str, str]]) -> list[dict[str,
     for booking in bookings:
         name = str(booking.get("name") or "").strip()
         cost = str(booking.get("cost") or "").strip()
-        if not name and not cost:
+        if not cost:
             continue
         rows.append(
             {
@@ -311,9 +385,56 @@ def budget_items_from_bookings(bookings: list[dict[str, str]]) -> list[dict[str,
                 "amount": cost,
                 "paid": "",
                 "source": "booking",
+                "currency": str(booking.get("cost_currency") or "AUD"),
+                "status": str(booking.get("cost_status") or "estimated"),
+                "note": str(booking.get("cost_note") or ""),
             }
         )
     return rows
+
+
+def budget_items_for_plan(plan: dict[str, Any]) -> list[dict[str, str]]:
+    """Combine booking costs with researched or manually added budget rows.
+
+    Args:
+        plan: Trip payload containing bookings and optional extra budget rows.
+
+    Returns:
+        Booking-derived costs followed by researched or manually added costs.
+
+    Needs: REQ-006, TEST-019
+    """
+
+    booking_rows = budget_items_from_bookings(plan.get("booking_items") or [])
+    extra_rows = [
+        dict(item)
+        for item in plan.get("budget_items") or []
+        if str(item.get("source") or "") != "booking"
+    ]
+    return booking_rows + extra_rows
+
+
+def budget_totals_by_currency(budget_items: list[dict[str, str]]) -> dict[str, float]:
+    """Total budget rows separately for each currency.
+
+    Args:
+        budget_items: Cost rows with amount and currency values.
+
+    Returns:
+        Numeric totals keyed by currency code.
+
+    Needs: REQ-006, TEST-019
+    """
+
+    totals: dict[str, float] = {}
+    for item in budget_items:
+        currency = str(item.get("currency") or "AUD").strip().upper()
+        try:
+            amount = float(str(item.get("amount", "")).strip() or 0)
+        except ValueError:
+            continue
+        totals[currency] = totals.get(currency, 0.0) + amount
+    return totals
 
 
 def budget_total(budget_items: list[dict[str, str]]) -> float:

@@ -636,27 +636,6 @@
     });
   }
 
-  function refreshBudgetExtract() {
-    var inputs = document.querySelectorAll(".booking-row [name='booking_cost']");
-    var lines = document.querySelectorAll("[data-budget-line]");
-    var total = 0;
-    inputs.forEach(function (input, index) {
-      var amount = parseFloat(input.value);
-      if (!isNaN(amount)) {
-        total += amount;
-      }
-      var line = lines[index];
-      var slot = line ? line.querySelector("[data-budget-amount]") : null;
-      if (slot) {
-        slot.textContent = input.value ? "$" + Number(input.value).toFixed(2) : "No cost yet";
-      }
-    });
-    var totalNode = document.querySelector("[data-budget-total]");
-    if (totalNode) {
-      totalNode.textContent = "Total: $" + total.toFixed(2);
-    }
-  }
-
   function run() {
     initTabs();
     initWorkspaceAutosave();
@@ -673,11 +652,6 @@
     initDetailsPopovers();
     initBackButton();
     initTaskCheckboxes();
-    document.addEventListener("input", function (event) {
-      if (event.target && event.target.name === "booking_cost") {
-        refreshBudgetExtract();
-      }
-    });
   }
 
   if (document.readyState === "loading") {

@@ -1980,6 +1980,13 @@ body::before {
   width: 7rem;
 }
 
+.booking-summary-cost span:not(.visually-hidden) {
+  margin-left: 0.2rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .booking-summary-notes {
   margin: 0.25rem 0 0;
   max-height: 2.8em;
@@ -2023,10 +2030,58 @@ body::before {
 
 .budget-extract-line {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid var(--border);
+  padding: 0.45rem 0.55rem;
+  border: 1px solid currentColor;
+  border-radius: 9px;
+}
+
+.budget-confirmed {
+  color: #176b42;
+  background: #edf9f1;
+}
+
+.budget-estimated {
+  color: #a32f2f;
+  background: #fff0f0;
+}
+
+.budget-line-copy,
+.budget-line-value {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.budget-line-copy {
+  min-width: 0;
+}
+
+.budget-line-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.budget-line-value {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.budget-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+
+.budget-totals span {
+  padding: 0.28rem 0.5rem;
+  border-radius: 999px;
+  background: #e4f5f2;
+  color: var(--accent-dim);
+  font-weight: 700;
 }
 
 .document-file-list {
@@ -2129,17 +2184,9 @@ body::before {
 }
 
 .task-compact-list {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
   gap: 0.35rem;
   width: 100%;
-  overflow-x: auto;
-  padding-bottom: 0.2rem;
-  scrollbar-width: none;
-}
-
-.task-compact-list::-webkit-scrollbar {
-  display: none;
 }
 
 .task-autosave-status {
@@ -2148,13 +2195,11 @@ body::before {
 }
 
 .task-compact-row {
-  flex: 0 0 auto;
   display: grid;
-  grid-template-columns: 1.2rem max-content;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
   gap: 0.35rem;
   align-items: center;
-  width: max-content;
-  max-width: 100%;
+  width: 100%;
   padding: 0.28rem 0.42rem;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -2162,7 +2207,9 @@ body::before {
 }
 
 .task-compact-label {
-  max-width: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.85rem;
   line-height: 1.15;
@@ -2176,8 +2223,7 @@ body::before {
 }
 
 .task-quick-add {
-  grid-template-columns: 1.2rem minmax(8rem, 12rem);
-  width: auto;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
   border-style: dashed;
 }
 

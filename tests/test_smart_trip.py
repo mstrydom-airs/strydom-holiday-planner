@@ -6,8 +6,11 @@ Needs: REQ-006, SPEC-006, TEST-018, TEST-019
 from __future__ import annotations
 
 from trip_planner.services.smart_trip import (
+    add_typical_trip_tasks,
     append_suggestions_to_packing,
     assistant_suggestions,
+    budget_items_for_plan,
+    budget_totals_by_currency,
     normalise_workspace_plan,
     packing_text,
     parse_booking_rows,
@@ -127,6 +130,9 @@ def test_booking_and_packing_helpers__mixed_rows__keep_only_useful_values() -> N
             "address": "Main Street",
             "notes": "Late check-in",
             "cost": "",
+            "cost_currency": "",
+            "cost_status": "",
+            "cost_note": "",
         }
     ]
     assert packing == [
@@ -136,6 +142,64 @@ def test_booking_and_packing_helpers__mixed_rows__keep_only_useful_values() -> N
     assert tasks == [{"owner": "Mario", "text": "Check tyres", "due": "", "status": ""}]
     assert budget == [{"category": "Fuel", "description": "Trip fuel", "amount": "80", "paid": ""}]
     assert documents == [{"label": "Tickets", "location": "Phone", "notes": "QR"}]
+
+
+def test_budget_helpers__mixed_currencies__preserve_research_and_total_separately() -> None:
+    """Keep researched estimates and avoid combining currencies.
+
+    Needs: REQ-006, TEST-019
+    """
+
+    plan = {
+        "booking_items": [
+            {
+                "category": "Hotel",
+                "name": "Confirmed hotel",
+                "cost": "100",
+                "cost_currency": "AUD",
+                "cost_status": "confirmed",
+            }
+        ],
+        "budget_items": [
+            {
+                "description": "Tower tickets",
+                "amount": "360",
+                "currency": "CNY",
+                "status": "estimated",
+                "source": "online",
+            }
+        ],
+    }
+
+    items = budget_items_for_plan(plan)
+
+    assert budget_totals_by_currency(items) == {"AUD": 100.0, "CNY": 360.0}
+    assert items[1]["description"] == "Tower tickets"
+
+
+def test_typical_tasks__overseas_flight_and_hotel__adds_relevant_items_once() -> None:
+    """Seed every trip with relevant, idempotent tasks.
+
+    Needs: REQ-006, TEST-019
+    """
+
+    plan = {
+        "plan_category": "Holiday overseas",
+        "task_items": [],
+        "booking_items": [
+            {"category": "Flight", "name": "CX156"},
+            {"category": "Accommodation", "name": "City Hotel"},
+        ],
+    }
+
+    first_count = add_typical_trip_tasks(plan, "extended")
+    second_count = add_typical_trip_tasks(plan, "extended")
+    task_text = {item["text"] for item in plan["task_items"]}
+
+    assert first_count > 4
+    assert second_count == 0
+    assert "Check passport validity and entry requirements" in task_text
+    assert "Reconfirm check-in, check-out and room or site inclusions" in task_text
 
 
 def test_packing_reuse_helpers__previous_and_suggestions__dedupe_items() -> None:
@@ -277,7 +341,7 @@ def test_trip_workspace__create_update_booking_and_packing__renders_saved_worksp
     assert b"data-close-details" in opened.data
     assert b"Check tyre pressure" in pack.data
     assert b"Park confirmation" in pack.data
-    assert b"$320.50" in pack.data
+    assert b"AUD 320.50" in pack.data
 
 
 def test_trip_workspace__autosave_booking__persists_without_redirect(flask_client) -> None:  # type: ignore[no-untyped-def]

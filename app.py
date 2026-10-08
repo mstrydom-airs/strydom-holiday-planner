@@ -62,8 +62,8 @@ from trip_planner.services.place_lookup import fill_missing_place_contacts
 from trip_planner.services.smart_trip import (
     append_suggestions_to_packing,
     assistant_suggestions,
-    budget_items_from_bookings,
-    budget_total,
+    budget_items_for_plan,
+    budget_totals_by_currency,
     normalise_workspace_plan,
     packing_text,
     parse_booking_rows,
@@ -2410,7 +2410,7 @@ def _apply_workspace_sections(plan):
         plan["booking_import_text"] = request.form.get("booking_import_text", "")
     plan["task_items"] = parse_task_rows(request.form)
     _append_selected_checklist_tasks(plan)
-    plan["budget_items"] = budget_items_from_bookings(plan["booking_items"])
+    plan["budget_items"] = budget_items_for_plan(plan)
     plan["document_items"] = parse_document_rows(request.form)
     plan["important_links"] = _parse_important_links()
     plan["packing_items"] = parse_packing_text(
@@ -2462,7 +2462,8 @@ def _workspace_template_context(plan, kind, trip_id):
         "packing_text": packing_text(plan),
         "suggestions": suggestions,
         "checklist_suggestions": _trip_checklist_suggestions(plan, kind),
-        "budget_total": budget_total(budget_items_from_bookings(plan.get("booking_items") or [])),
+        "budget_items": budget_items_for_plan(plan),
+        "budget_totals": budget_totals_by_currency(budget_items_for_plan(plan)),
         "trip_category_options": TRIP_CATEGORY_OPTIONS,
         "planner_profile_options": PLANNER_PROFILE_OPTIONS,
         "stay_size_options": STAY_SIZE_OPTIONS,
@@ -2777,7 +2778,8 @@ def trip_pack(kind, trip_id):
         date_label=_workspace_date_label(kind, plan),
         travelers_display=_travelers_display(plan),
         packing_text=packing_text(plan),
-        budget_total=budget_total(budget_items_from_bookings(plan.get("booking_items") or [])),
+        budget_items=budget_items_for_plan(plan),
+        budget_totals=budget_totals_by_currency(budget_items_for_plan(plan)),
     )
 
 

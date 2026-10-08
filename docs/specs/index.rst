@@ -80,7 +80,10 @@ Detailed designs that elaborate one or more requirements.
    identify selected flights whose details are still missing. Important links
    use one compact label-and-address row. Packing text and daily planner editors
    are collapsed until requested, while their checklists and day labels remain
-   visible. Budget lines are the cost stored on each booking.
+   visible. Trip Tasks renders concise full-width rows and automatically adds
+   missing checklist items based on each trip's bookings, transport, category,
+   and activities. Budget lines preserve their currency and confidence: confirmed
+   booking totals render green, while researched or planning estimates render red.
    ``trip_planner.services.smart_trip`` suggest packing and booking prompts from
    trip category, planner profile, transport, accommodation, and previous saved
    packing items. ``app.trip_pack`` renders a printable family trip pack.
