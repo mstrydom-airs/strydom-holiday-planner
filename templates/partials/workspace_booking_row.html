@@ -1,0 +1,77 @@
+<div class="booking-row {% if booking.missing_info %}needs-info{% endif %}">
+  <div class="booking-summary">
+    <span class="booking-summary-date">
+      {% if booking.date %}{{ booking.date|fmt_dmy }}{% endif %}
+      {% if booking.end_date and booking.end_date != booking.date %} → {{ booking.end_date|fmt_dmy }}{% endif %}
+    </span>
+    <span class="booking-summary-time">
+      {{ booking.time or '' }}{% if booking.checkout_time %} → {{ booking.checkout_time }}{% endif %}
+    </span>
+    <strong>{{ booking.name or 'New booking' }}</strong>
+    {% if booking.reference %}<span class="booking-summary-ref">{{ booking.reference }}</span>{% endif %}
+    <label class="booking-summary-cost">
+      <span class="visually-hidden">Cost</span>
+      <input type="number" step="0.01" min="0" name="booking_cost" value="{{ booking.cost or '' }}" placeholder="Cost" aria-label="Cost for {{ booking.name or 'booking' }}">
+    </label>
+  </div>
+  {% if booking.notes %}
+  <p class="muted small booking-summary-notes">{{ booking.notes }}</p>
+  {% endif %}
+  {% if booking.missing_info %}
+  <p class="booking-missing-info">missing {{ booking.missing_info }}</p>
+  {% endif %}
+  <details class="booking-edit" {% if not booking.name %}open{% endif %}>
+    <summary>Edit</summary>
+    <div class="row three">
+      <label class="field">
+        <span>Type</span>
+        <select name="booking_category">
+          <option value="">Choose...</option>
+          {% for option in booking_category_options %}
+          <option value="{{ option }}" {% if booking.category == option %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field">
+        <span>Name</span>
+        <input type="text" name="booking_name" value="{{ booking.name or '' }}" placeholder="Hotel, flight, show...">
+      </label>
+      <label class="field">
+        <span>Reference</span>
+        <input type="text" name="booking_reference" value="{{ booking.reference or '' }}" placeholder="Confirmation number">
+      </label>
+    </div>
+    <div class="row two">
+      <label class="field">
+        <span>Date</span>
+        <input type="date" name="booking_date" value="{{ booking.date or '' }}">
+      </label>
+      <label class="field">
+        <span>End date</span>
+        <input type="date" name="booking_end_date" value="{{ booking.end_date or '' }}">
+      </label>
+    </div>
+    <div class="row two">
+      <label class="field">
+        <span>Time</span>
+        <input type="time" name="booking_time" value="{{ booking.time or '' }}">
+      </label>
+      <label class="field">
+        <span>End time</span>
+        <input type="time" name="booking_checkout_time" value="{{ booking.checkout_time or '' }}">
+      </label>
+    </div>
+    <label class="field">
+      <span>Website</span>
+      <input type="text" name="booking_website" value="{{ booking.website or '' }}" placeholder="https://...">
+    </label>
+    <label class="field">
+      <span>Address / location</span>
+      <input type="text" name="booking_address" value="{{ booking.address or '' }}" placeholder="Airport, hotel, venue...">
+    </label>
+    <label class="field">
+      <span>Notes</span>
+      <textarea name="booking_notes" rows="2" placeholder="Terminal, seats, check-in...">{{ booking.notes or '' }}</textarea>
+    </label>
+  </details>
+</div>

@@ -38,3 +38,13 @@ Thumbs.db
 
 # Local SQLite — do not commit personal trip data
 travel_hub.db
+travel_hub.db.bak*
+travel_hub.db.syncing
+
+# Last successful Home Assistant sync (this PC only)
+.cursor/ha-sync-stamp
+
+# Private trip source documents stay local; keep only folder instructions in Git
+Trip Planning/**
+!Trip Planning/**/
+!Trip Planning/**/README.md

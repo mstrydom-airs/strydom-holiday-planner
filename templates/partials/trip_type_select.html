@@ -1,8 +1,8 @@
 {# trip_type: 'home' | 'planning' | 'day_trip' | 'weekend' | 'long_weekend' | 'extended' #}
 <div class="trip-type-bar">
   <label class="field trip-type-field">
-    <span>Start Holiday Plan</span>
-    <select class="trip-type-select" aria-label="Start holiday plan">
+    <span>Trip length</span>
+    <select class="trip-type-select" aria-label="Trip length">
       {% if trip_type == 'home' %}
       <option value="" selected disabled>Choose plan…</option>
       {% elif trip_type == 'planning' %}

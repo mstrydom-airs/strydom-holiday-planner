@@ -1,17 +1,90 @@
 {% extends "base.html" %}
-{% block title %}Plan a Holiday — Strydom Travel Hub{% endblock %}
+{% block title %}Holiday Details — Strydom Travel Hub{% endblock %}
 {% block content %}
-<section class="hero">
+<section class="hero holiday-details-hero">
   <div class="hero-copy">
-    <h1 class="hero-title">Plan a Holiday</h1>
-    <p class="hero-lead">Choose a destination and trip length, then open a blank plan, reuse a name, or <strong>duplicate</strong> a saved plan—set dates on the trip page.</p>
+    <h1 class="hero-title">Holiday Details</h1>
+    <p class="hero-lead">Add booking emails, confirmations, documents, websites, and notes to a trip workspace.</p>
   </div>
   <img class="hero-image" src="{{ url_for('static', filename='img/planning-desk.svg') }}" alt="Holiday planning desk with a map and suitcase">
 </section>
 
-<div class="plan-holiday-panel form-section">
-  <h2 class="summary-heading">Start Holiday Plan</h2>
-  <p class="muted small">Duplicate copies travellers, transport, and notes; dates clear for the new trip. The new-name field only appears for <strong>＋ New destination…</strong></p>
+<div class="holiday-task-panel form-section compact-section">
+  <h2 class="summary-heading">Add Details to a Trip</h2>
+  <div class="row two">
+    <label class="field">
+      <span>Trip</span>
+      <select id="task-trip" aria-label="Trip to update">
+        <option value="">Choose a trip...</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>What are you adding?</span>
+      <select id="task-type" aria-label="Detail type to add">
+        <option value="file">File / email / image</option>
+        <option value="email">Email or confirmation text</option>
+        <option value="website">Website link</option>
+        <option value="note">Manual note or detail</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="selected-trip-summary" id="task-trip-summary" hidden></div>
+
+  <div class="task-input-panel" data-task-panel="file">
+    <label class="field">
+      <span>Email, PDF, ticket, image, or screenshot</span>
+      <input type="file" id="task-file" accept=".pdf,.txt,.eml,image/*,.doc,.docx">
+    </label>
+    <label class="field">
+      <span>Document note</span>
+      <input type="text" id="task-file-note" placeholder="e.g. Shanghai robot show itinerary">
+    </label>
+  </div>
+
+  <div class="task-input-panel" data-task-panel="email" hidden>
+    <label class="field">
+      <span>Booking type</span>
+      <select id="task-booking-category">
+        {% for option in booking_category_options %}
+        <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field">
+      <span>Email or confirmation text</span>
+      <textarea id="task-email-text" rows="6" placeholder="Paste hotel, flight, event, caravan park, restaurant, or ticket confirmation text here."></textarea>
+    </label>
+  </div>
+
+  <div class="task-input-panel" data-task-panel="website" hidden>
+    <div class="row two">
+      <label class="field">
+        <span>Link label</span>
+        <input type="text" id="task-link-label" placeholder="Hotel website">
+      </label>
+      <label class="field">
+        <span>Website</span>
+        <input type="text" id="task-link-url" placeholder="https://...">
+      </label>
+    </div>
+  </div>
+
+  <div class="task-input-panel" data-task-panel="note" hidden>
+    <label class="field">
+      <span>Note or trip detail</span>
+      <textarea id="task-note-text" rows="4" placeholder="Add address, phone, how to get there, travel details, flight details, or other notes."></textarea>
+    </label>
+  </div>
+
+  <div class="holiday-extract-actions">
+    <button type="button" class="btn btn-primary" id="task-add-btn">Add to selected trip</button>
+    <p class="muted small" id="task-import-status" aria-live="polite"></p>
+  </div>
+</div>
+
+<div class="plan-holiday-panel form-section compact-section">
+  <h2 class="summary-heading">Open or Create a Trip</h2>
   <div class="row two plan-holiday-fields">
     <label class="field">
       <span>Choose a destination</span>
@@ -38,15 +111,327 @@
   </p>
 </div>
 
+<div class="holiday-trip-finder form-section compact-section">
+  <h2 class="summary-heading">Find a Saved Trip</h2>
+  <div class="holiday-filter-grid">
+    <label class="field">
+      <span>From</span>
+      <input type="date" id="filter-start" aria-label="Trip starts after">
+    </label>
+    <label class="field">
+      <span>To</span>
+      <input type="date" id="filter-end" aria-label="Trip ends before">
+    </label>
+    <label class="field">
+      <span>Trip / booking type</span>
+      <select id="filter-category" aria-label="Filter by trip or booking type">
+        <option value="">Any type</option>
+        {% for option in trip_category_options %}
+        <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field">
+      <span>Trip length</span>
+      <select id="filter-kind" aria-label="Filter by trip length">
+        <option value="">Any length</option>
+        {% for value, label in trip_length_options %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field">
+      <span>Who's going</span>
+      <select id="filter-traveler" aria-label="Filter by person or group">
+        <option value="">Anyone</option>
+        {% for value, label in going_person_options %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field">
+      <span>Activity</span>
+      <select id="filter-activity" aria-label="Filter by activity">
+        <option value="">Any activity</option>
+        {% for option in holiday_type_options %}
+        <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+  <label class="field">
+    <span>Search by name or details</span>
+    <input type="text" id="filter-text" placeholder="e.g. Noosa, Accor, theatre">
+  </label>
+  <div class="holiday-results-row">
+    <label class="field">
+      <span>Matching trips</span>
+      <select id="details-trip" aria-label="Choose trip for imported details">
+        <option value="">Choose a trip…</option>
+      </select>
+    </label>
+    <p class="muted small holiday-result-count" id="holiday-result-count">No trip selected.</p>
+  </div>
+</div>
+
+<div class="holiday-details-import form-section compact-section">
+  <h2 class="summary-heading">Import Emails and Bookings</h2>
+  <div class="row two">
+    <label class="field">
+      <span>What to add</span>
+      <select id="detail-kind" aria-label="Type of holiday detail">
+        {% for option in booking_category_options %}
+        <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="holiday-extract-actions">
+      <button type="button" class="btn btn-secondary" id="extract-details-btn">Extract details</button>
+      <button type="button" class="btn btn-primary" id="open-details-btn">Open trip details</button>
+    </div>
+  </div>
+  <label class="field">
+    <span>Email or booking text</span>
+    <textarea id="details-import-text" rows="5" placeholder="Paste the email or booking confirmation. The planner can pull out dates, times, phone numbers, addresses, websites, and reference numbers."></textarea>
+  </label>
+  <div class="extracted-details" id="extracted-details" hidden></div>
+</div>
+
 <script type="application/json" id="plans-by-kind-data">{{ plans_by_kind|tojson }}</script>
 <script>
 (function () {
   var dataEl = document.getElementById("plans-by-kind-data");
+  var tripSelect = document.getElementById("task-trip");
+  var taskType = document.getElementById("task-type");
+  var summary = document.getElementById("task-trip-summary");
+  var addBtn = document.getElementById("task-add-btn");
+  if (!dataEl || !tripSelect || !taskType || !addBtn) return;
+
+  var plansData = JSON.parse(dataEl.textContent);
+  var allTrips = plansData.all_trips || [];
+  var workspaceUrlTemplate = {{ url_for('trip_workspace', kind='__kind__', trip_id='__id__')|tojson }};
+
+  function selectedTrip() {
+    return allTrips.find(function (row) {
+      return row.kind + ":" + row.id === tripSelect.value;
+    }) || null;
+  }
+
+  function fillTrips() {
+    tripSelect.innerHTML = '<option value="">Choose a trip...</option>';
+    allTrips.forEach(function (row) {
+      var option = document.createElement("option");
+      option.value = row.kind + ":" + row.id;
+      option.textContent = row.label;
+      tripSelect.appendChild(option);
+    });
+  }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char];
+    });
+  }
+
+  function documentListHtml(row) {
+    var documents = uploadedDocuments(row);
+    var html = "";
+    if (documents.length) {
+      var items = documents.map(function (document) {
+        var label = document.label || "Document";
+        var location = document.location && document.location !== label ? " — " + document.location : "";
+        return "<li><strong>" + escapeHtml(label) + "</strong>" + escapeHtml(location) + "</li>";
+      }).join("");
+      html += '<div class="selected-trip-files"><strong>Files uploaded</strong><ul>' + items + "</ul></div>";
+    } else {
+      html += '<p class="muted small selected-trip-files-empty">No files uploaded to this trip yet.</p>';
+    }
+    html += suggestedDocumentsHtml(row, documents);
+    return html;
+  }
+
+  function uploadedDocuments(row) {
+    return (row.document_items || []).filter(function (document) {
+      var label = document.label || "";
+      var location = document.location || "";
+      var isFile = /\.(pdf|txt|docx?|png|jpe?g)$/i.test(label) || /\.(pdf|txt|docx?|png|jpe?g)$/i.test(location);
+      return document.source === "upload" || isFile;
+    });
+  }
+
+  function suggestedDocumentsHtml(row, uploaded) {
+    var uploadedText = uploaded.map(function (document) {
+      return ((document.label || "") + " " + (document.location || "")).toLowerCase();
+    }).join(" ");
+    var suggestions = ["Hotel confirmations", "Flight confirmations", "Tickets"];
+    if (row.plan_category === "Holiday overseas") {
+      suggestions = suggestions.concat(["Passport copies", "Visa", "Travel insurance"]);
+    }
+    var missing = suggestions.filter(function (item) {
+      return uploadedText.indexOf(item.split(" ")[0].toLowerCase()) === -1;
+    });
+    if (!missing.length) {
+      return "";
+    }
+    return '<div class="selected-trip-files suggested-documents"><strong>Suggested documents to upload</strong><ul>' + missing.map(function (item) {
+      return "<li>" + escapeHtml(item) + "</li>";
+    }).join("") + "</ul></div>";
+  }
+
+  function updateSummary() {
+    var row = selectedTrip();
+    if (!row || !summary) {
+      if (summary) summary.hidden = true;
+      return;
+    }
+    summary.hidden = false;
+    summary.innerHTML = "<strong>" + escapeHtml(row.title) + "</strong> · " + escapeHtml(row.label) + documentListHtml(row);
+  }
+
+  function showTaskPanel() {
+    document.querySelectorAll("[data-task-panel]").forEach(function (panel) {
+      panel.hidden = panel.getAttribute("data-task-panel") !== taskType.value;
+    });
+  }
+
+  function extractBasicBooking(text) {
+    var lines = text.split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+    var reference = (text.match(/\b(?:confirmation|reference|reservation|booking|conf)\s*(?:number|no|#|:)?\s*([A-Z0-9-]{4,})\b/i) || [])[1] || "";
+    var website = (text.match(/https?:\/\/[^\s)]+/i) || [])[0] || "";
+    var phone = (text.match(/(?:\+?\d[\d\s().-]{7,}\d)/) || [])[0] || "";
+    return {
+      category: document.getElementById("task-booking-category").value,
+      name: lines[0] || "Imported confirmation",
+      date: "",
+      end_date: "",
+      time: "",
+      website: website,
+      reference: reference,
+      address: "",
+      notes: (phone ? "Phone: " + phone + "\n\n" : "") + text
+    };
+  }
+
+  function openSelectedTrip(hash) {
+    var parts = tripSelect.value.split(":");
+    if (parts.length !== 2) return;
+    var href = workspaceUrlTemplate
+      .replace("__kind__", encodeURIComponent(parts[0]))
+      .replace("__id__", encodeURIComponent(parts[1]));
+    window.location.href = href + hash;
+  }
+
+  function importTripDocument(file, note) {
+    var parts = tripSelect.value.split(":");
+    if (parts.length !== 2) return;
+    var url = workspaceUrlTemplate
+      .replace("__kind__", encodeURIComponent(parts[0]))
+      .replace("__id__", encodeURIComponent(parts[1])) + "/import-itinerary";
+    var form = new FormData();
+    form.append("file", file);
+    form.append("note", note || "");
+    addBtn.disabled = true;
+    addBtn.textContent = "Scanning...";
+    fetch(url, { method: "POST", body: form })
+      .then(function (response) { return response.json(); })
+      .then(function (payload) {
+        if (!payload.ok) {
+          window.alert(payload.error || "Could not import the document.");
+          return;
+        }
+        var row = selectedTrip();
+        if (row && payload.document) {
+          row.document_items = row.document_items || [];
+          var location = payload.document.location || "";
+          var existing = row.document_items.find(function (item) {
+            return item.source === "upload" && item.location === location && location;
+          });
+          if (existing) {
+            existing.notes = payload.document.notes;
+            existing.label = payload.document.label;
+          } else {
+            row.document_items.push(payload.document);
+          }
+          updateSummary();
+        }
+        var importStatus = document.getElementById("task-import-status");
+        if (importStatus) {
+          importStatus.textContent = (payload.summary && payload.summary.message) || "File added.";
+        }
+        document.getElementById("task-file").value = "";
+        document.getElementById("task-file-note").value = "";
+      })
+      .catch(function () {
+        window.alert("Could not import the document.");
+      })
+      .finally(function () {
+        addBtn.disabled = false;
+        addBtn.textContent = "Add to selected trip";
+      });
+  }
+
+  addBtn.addEventListener("click", function () {
+    if (!selectedTrip()) return;
+    if (taskType.value === "file") {
+      var file = document.getElementById("task-file").files[0];
+      var note = document.getElementById("task-file-note").value.trim();
+      if (file) {
+        importTripDocument(file, note);
+        return;
+      }
+      return;
+    }
+    if (taskType.value === "website") {
+      window.localStorage.setItem("pendingLinkRows", JSON.stringify([{
+        label: document.getElementById("task-link-label").value.trim() || "Website",
+        url: document.getElementById("task-link-url").value.trim()
+      }]));
+      openSelectedTrip("#bookings");
+      return;
+    }
+    var text = taskType.value === "note"
+      ? document.getElementById("task-note-text").value.trim()
+      : document.getElementById("task-email-text").value.trim();
+    if (text) {
+      window.localStorage.setItem("pendingBookingImport", text);
+      window.localStorage.setItem("pendingBookingRows", JSON.stringify([extractBasicBooking(text)]));
+    }
+    openSelectedTrip("#bookings");
+  });
+
+  tripSelect.addEventListener("change", updateSummary);
+  taskType.addEventListener("change", showTaskPanel);
+  fillTrips();
+  showTaskPanel();
+})();
+
+(function () {
+  var dataEl = document.getElementById("plans-by-kind-data");
   var kindSel = document.getElementById("open-kind");
   var tripSel = document.getElementById("open-trip");
+  var detailsTripSel = document.getElementById("details-trip");
+  var filterStart = document.getElementById("filter-start");
+  var filterEnd = document.getElementById("filter-end");
+  var filterCategory = document.getElementById("filter-category");
+  var filterKind = document.getElementById("filter-kind");
+  var filterTraveler = document.getElementById("filter-traveler");
+  var filterActivity = document.getElementById("filter-activity");
+  var filterText = document.getElementById("filter-text");
+  var resultCount = document.getElementById("holiday-result-count");
   var newWrap = document.getElementById("open-new-title-wrap");
   var newInput = document.getElementById("open-new-title");
   var btn = document.getElementById("open-plan-btn");
+  var detailsBtn = document.getElementById("open-details-btn");
+  var extractBtn = document.getElementById("extract-details-btn");
+  var detailKind = document.getElementById("detail-kind");
+  var detailsImportText = document.getElementById("details-import-text");
+  var extractedDetails = document.getElementById("extracted-details");
   if (!dataEl || !kindSel || !tripSel || !btn) return;
 
   var plansData = JSON.parse(dataEl.textContent);
@@ -58,6 +443,7 @@
     long_weekend: {{ url_for('long_weekend')|tojson }},
     extended: {{ url_for('extended')|tojson }}
   };
+  var workspaceUrlTemplate = {{ url_for('trip_workspace', kind='__kind__', trip_id='__id__')|tojson }};
   var PREFIX_DUP = "duplicate:";
 
   function fillTripOptions() {
@@ -96,6 +482,270 @@
     newInput.value = "";
   }
 
+  function tripMatches(row) {
+    var start = filterStart && filterStart.value;
+    var end = filterEnd && filterEnd.value;
+    var rowStart = row.start_date || row.end_date || "";
+    var rowEnd = row.end_date || row.start_date || "";
+    if (start && rowEnd && rowEnd < start) return false;
+    if (end && rowStart && rowStart > end) return false;
+    if (filterCategory && filterCategory.value && row.plan_category !== filterCategory.value) return false;
+    if (filterKind && filterKind.value && row.kind !== filterKind.value) return false;
+    if (filterTraveler && filterTraveler.value && (row.travelers || []).indexOf(filterTraveler.value) < 0) return false;
+    if (filterActivity && filterActivity.value && (row.holiday_types || []).indexOf(filterActivity.value) < 0) return false;
+    if (filterText && filterText.value.trim()) {
+      var q = filterText.value.trim().toLowerCase();
+      var haystack = [
+        row.label,
+        row.title,
+        row.plan_category,
+        (row.holiday_types || []).join(" "),
+        (row.travelers || []).join(" ")
+      ].join(" ").toLowerCase();
+      if (haystack.indexOf(q) < 0) return false;
+    }
+    return true;
+  }
+
+  function fillDetailsTripOptions() {
+    if (!detailsTripSel) return;
+    var selected = detailsTripSel.value;
+    var matches = allTrips.filter(tripMatches);
+    detailsTripSel.innerHTML = "";
+    var empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = matches.length ? "Choose a trip..." : "No matching trips";
+    detailsTripSel.appendChild(empty);
+    matches.forEach(function (row) {
+      var o = document.createElement("option");
+      o.value = row.kind + ":" + row.id;
+      o.textContent = row.label;
+      detailsTripSel.appendChild(o);
+    });
+    if (matches.some(function (row) { return row.kind + ":" + row.id === selected; })) {
+      detailsTripSel.value = selected;
+    }
+    if (resultCount) {
+      resultCount.textContent = matches.length + " matching trip" + (matches.length === 1 ? "" : "s") + ".";
+    }
+  }
+
+  function uniqueMatches(text, regex) {
+    var seen = {};
+    var found = [];
+    var match;
+    while ((match = regex.exec(text)) !== null) {
+      var value = (match[1] || match[0]).trim().replace(/[.,;]+$/, "");
+      if (value && !seen[value]) {
+        seen[value] = true;
+        found.push(value);
+      }
+    }
+    return found;
+  }
+
+  function normaliseDate(value) {
+    var numeric = value.match(/\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/);
+    if (numeric) {
+      var year = numeric[3].length === 2 ? "20" + numeric[3] : numeric[3];
+      return year + "-" + numeric[2].padStart(2, "0") + "-" + numeric[1].padStart(2, "0");
+    }
+    var iso = value.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+    if (iso) return iso[0];
+    var named = value.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+(\d{2,4})\b/i);
+    if (named) {
+      var months = {
+        jan: "01",
+        feb: "02",
+        mar: "03",
+        apr: "04",
+        may: "05",
+        jun: "06",
+        jul: "07",
+        aug: "08",
+        sep: "09",
+        sept: "09",
+        oct: "10",
+        nov: "11",
+        dec: "12"
+      };
+      var namedYear = named[3].length === 2 ? "20" + named[3] : named[3];
+      var monthKey = named[2].toLowerCase().indexOf("sept") === 0
+        ? "sept"
+        : named[2].toLowerCase().slice(0, 3);
+      return namedYear + "-" + months[monthKey] + "-" + named[1].padStart(2, "0");
+    }
+    return "";
+  }
+
+  function normaliseTime(value) {
+    var twentyFour = value.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+    if (twentyFour) return twentyFour[1].padStart(2, "0") + ":" + twentyFour[2];
+    var twelveHour = value.match(/\b([1-9]|1[0-2])(?::([0-5]\d))?\s*(am|pm)\b/i);
+    if (!twelveHour) return "";
+    var hour = parseInt(twelveHour[1], 10);
+    var minute = twelveHour[2] || "00";
+    if (twelveHour[3].toLowerCase() === "pm" && hour < 12) hour += 12;
+    if (twelveHour[3].toLowerCase() === "am" && hour === 12) hour = 0;
+    return String(hour).padStart(2, "0") + ":" + minute;
+  }
+
+  function extractDetails(text) {
+    var lines = text.split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+    var phones = uniqueMatches(text, /(?:\+?\d[\d\s().-]{7,}\d)/g).filter(function (phone) {
+      return phone.replace(/\D/g, "").length >= 8;
+    });
+    var dates = uniqueMatches(text, /\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{2,4})\b/gi);
+    var references = uniqueMatches(text, /\b(?:confirmation|reference|reservation|booking|conf)\s*(?:number|no|#|:)?\s*([A-Z0-9-]{4,})\b/gi);
+    var websites = uniqueMatches(text, /https?:\/\/[^\s)]+/gi);
+    var times = uniqueMatches(text, /\b(?:[01]?\d|2[0-3]):[0-5]\d\b|\b(?:[1-9]|1[0-2])(?::[0-5]\d)?\s*(?:am|pm)\b/gi);
+    var addressLines = lines.filter(function (line) {
+      return /(address|location|venue|street|st\b|road|rd\b|avenue|ave\b|drive|dr\b|lane|ln\b|boulevard|blvd|terrace|tce|parade|pde|highway|hwy)/i.test(line);
+    });
+    return {
+      name: lines[0] || "",
+      phone: phones[0] || "",
+      dateText: dates[0] || "",
+      date: dates[0] ? normaliseDate(dates[0]) : "",
+      time: times[0] ? normaliseTime(times[0]) : "",
+      website: websites[0] || "",
+      reference: references[0] || "",
+      address: addressLines[0] || "",
+      allPhones: phones,
+      allDates: dates,
+      allReferences: references
+    };
+  }
+
+  function selectedTrip() {
+    if (!detailsTripSel || !detailsTripSel.value) return null;
+    return allTrips.find(function (row) {
+      return row.kind + ":" + row.id === detailsTripSel.value;
+    }) || null;
+  }
+
+  function isAccorTrip(row) {
+    if (!row) return false;
+    var values = [
+      row.title,
+      row.plan_category,
+      row.accommodation_places,
+      (row.holiday_types || []).join(" "),
+      (row.accommodation || []).join(" ")
+    ].join(" ").toLowerCase();
+    return values.indexOf("accor") >= 0;
+  }
+
+  function cleanText(value) {
+    return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function cleanPhone(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function previousTripsForDestination(row) {
+    if (!row || isAccorTrip(row)) return [];
+    var title = cleanText(row.title);
+    return allTrips.filter(function (candidate) {
+      return !isAccorTrip(candidate) && cleanText(candidate.title) === title;
+    });
+  }
+
+  function detailsFromPriorTrip(row) {
+    var bookings = row.booking_items || [];
+    var importDetails = extractDetails(row.booking_import_text || "");
+    var firstBooking = bookings.find(function (booking) {
+      return booking.reference || booking.address || booking.website || booking.date || booking.notes;
+    }) || {};
+    var notesDetails = extractDetails(firstBooking.notes || "");
+    return {
+      reference: firstBooking.reference || importDetails.reference || notesDetails.reference || "",
+      address: firstBooking.address || importDetails.address || notesDetails.address || "",
+      website: firstBooking.website || importDetails.website || notesDetails.website || "",
+      date: firstBooking.date || importDetails.date || notesDetails.date || "",
+      phone: importDetails.phone || notesDetails.phone || ""
+    };
+  }
+
+  function compareWithPreviousDetails(details) {
+    var row = selectedTrip();
+    if (!row) return [];
+    if (isAccorTrip(row)) {
+      return ["Accor comparison skipped because Accor can mean many different properties."];
+    }
+    var warnings = [];
+    previousTripsForDestination(row).forEach(function (priorTrip) {
+      var prior = detailsFromPriorTrip(priorTrip);
+      [
+        ["reference", "confirmation/reference"],
+        ["address", "address/location"],
+        ["website", "website"],
+        ["date", "date"]
+      ].forEach(function (pair) {
+        var key = pair[0];
+        if (details[key] && prior[key] && cleanText(details[key]) !== cleanText(prior[key])) {
+          warnings.push(pair[1] + " differs from " + priorTrip.label + ": " + prior[key]);
+        }
+      });
+      if (details.phone && prior.phone && cleanPhone(details.phone) !== cleanPhone(prior.phone)) {
+        warnings.push("phone differs from " + priorTrip.label + ": " + prior.phone);
+      }
+    });
+    return warnings;
+  }
+
+  function renderExtractedDetails(details) {
+    if (!extractedDetails) return;
+    var rows = [
+      ["Reference", details.reference],
+      ["Date", details.dateText],
+      ["Time", details.time],
+      ["Phone", details.phone],
+      ["Address", details.address],
+      ["Website", details.website]
+    ].filter(function (row) { return row[1]; });
+    var warnings = compareWithPreviousDetails(details);
+    var warningHtml = warnings.map(function (warning) {
+      return "<span class=\"extracted-warning\"><strong>Check:</strong> " + escapeHtml(warning) + "</span>";
+    }).join("");
+    extractedDetails.hidden = false;
+    extractedDetails.innerHTML = rows.length
+      ? rows.map(function (row) { return "<span><strong>" + escapeHtml(row[0]) + ":</strong> " + escapeHtml(row[1]) + "</span>"; }).join("") + warningHtml
+      : "<span>No clear details found yet. The full text will still be saved for review.</span>" + warningHtml;
+  }
+
+  function buildBookingRow() {
+    var raw = detailsImportText ? detailsImportText.value.trim() : "";
+    var details = extractDetails(raw);
+    var notes = [];
+    if (details.phone) notes.push("Phone: " + details.phone);
+    if (details.dateText && !details.date) notes.push("Date found: " + details.dateText);
+    compareWithPreviousDetails(details).forEach(function (warning) {
+      notes.push("Check previous details: " + warning);
+    });
+    if (raw) notes.push(raw);
+    return {
+      category: detailKind ? detailKind.value : "",
+      name: details.name,
+      date: details.date,
+      time: details.time,
+      website: details.website,
+      reference: details.reference,
+      address: details.address,
+      notes: notes.join("\n\n")
+    };
+  }
+
   function parseDuplicateValue(v) {
     if (v.indexOf(PREFIX_DUP) !== 0) return null;
     var rest = v.slice(PREFIX_DUP.length);
@@ -123,8 +773,27 @@
   }
 
   tripSel.addEventListener("change", onTripChange);
+  [filterStart, filterEnd, filterCategory, filterKind, filterTraveler, filterActivity, filterText].forEach(function (control) {
+    if (control) {
+      control.addEventListener("input", fillDetailsTripOptions);
+      control.addEventListener("change", fillDetailsTripOptions);
+    }
+  });
+  if (extractBtn && detailsImportText) {
+    extractBtn.addEventListener("click", function () {
+      renderExtractedDetails(extractDetails(detailsImportText.value));
+    });
+  }
+  if (detailsTripSel && detailsImportText) {
+    detailsTripSel.addEventListener("change", function () {
+      if (detailsImportText.value.trim()) {
+        renderExtractedDetails(extractDetails(detailsImportText.value));
+      }
+    });
+  }
 
   fillTripOptions();
+  fillDetailsTripOptions();
 
   btn.addEventListener("click", function () {
     var v = tripSel.value;
@@ -150,6 +819,23 @@
       return;
     }
   });
+
+  if (detailsBtn && detailsTripSel) {
+    detailsBtn.addEventListener("click", function () {
+      var value = detailsTripSel.value;
+      var parts = value.split(":");
+      if (parts.length !== 2) return;
+      var href = workspaceUrlTemplate
+        .replace("__kind__", encodeURIComponent(parts[0]))
+        .replace("__id__", encodeURIComponent(parts[1]));
+      if (detailsImportText && detailsImportText.value.trim()) {
+        var bookingRow = buildBookingRow();
+        window.localStorage.setItem("pendingBookingImport", detailsImportText.value.trim());
+        window.localStorage.setItem("pendingBookingRows", JSON.stringify([bookingRow]));
+      }
+      window.location.href = href + "#bookings";
+    });
+  }
 })();
 </script>
 {% endblock %}

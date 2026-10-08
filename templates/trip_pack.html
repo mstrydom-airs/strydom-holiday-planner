@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Trip pack — {{ plan.title or 'Trip' }}{% endblock %}
+{% block content %}
+<section class="print-pack">
+  <div class="print-pack-head">
+    <div>
+      <p class="eyebrow">Printable trip pack</p>
+      <h1>{{ plan.title or 'Trip' }}</h1>
+      <p class="muted">{{ plan.plan_category }} · {{ date_label }}</p>
+      {% if travelers_display %}<p class="muted">Travellers: {{ travelers_display }}</p>{% endif %}
+    </div>
+    <button type="button" class="btn btn-primary no-print" onclick="window.print()">Print / save PDF</button>
+  </div>
+
+  <div class="print-pack-grid">
+    <section class="workspace-card">
+      <h2>Bookings</h2>
+      {% if plan.booking_items %}
+      <ul class="pack-list">
+        {% for booking in plan.booking_items %}
+        <li><strong>{{ booking.name or booking.category or 'Booking' }}</strong>{% if booking.date %} · {{ booking.date }}{% endif %}{% if booking.time %} {{ booking.time }}{% endif %}{% if booking.reference %}<br>Ref: {{ booking.reference }}{% endif %}{% if booking.address %}<br>{{ booking.address }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted small">No bookings recorded.</p>
+      {% endif %}
+    </section>
+
+    <section class="workspace-card">
+      <h2>Family tasks</h2>
+      {% if plan.task_items %}
+      <ul class="pack-list">
+        {% for task in plan.task_items %}
+        <li><strong>{{ task.owner or 'Someone' }}</strong>: {{ task.text }}{% if task.due %} · due {{ task.due }}{% endif %}{% if task.status %} · {{ task.status }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted small">No family tasks recorded.</p>
+      {% endif %}
+    </section>
+
+    <section class="workspace-card">
+      <h2>Packing</h2>
+      {% if packing_text %}
+      <pre class="pack-pre">{{ packing_text }}</pre>
+      {% else %}
+      <p class="muted small">No packing list recorded.</p>
+      {% endif %}
+    </section>
+
+    <section class="workspace-card">
+      <h2>Budget</h2>
+      <p class="budget-total">Estimated total: ${{ '%.2f'|format(budget_total) }}</p>
+      {% if plan.budget_items %}
+      <ul class="pack-list">
+        {% for item in plan.budget_items %}
+        <li>{{ item.category or 'Cost' }}: {{ item.description or 'Item' }}{% if item.amount %} · ${{ item.amount }}{% endif %}{% if item.paid %} · {{ item.paid }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </section>
+
+    <section class="workspace-card">
+      <h2>Documents</h2>
+      {% if plan.document_items %}
+      <ul class="pack-list">
+        {% for document in plan.document_items %}
+        <li><strong>{{ document.label or 'Document' }}</strong>{% if document.location %}: {{ document.location }}{% endif %}{% if document.notes %}<br>{{ document.notes }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted small">No documents recorded.</p>
+      {% endif %}
+    </section>
+
+    <section class="workspace-card">
+      <h2>Notes</h2>
+      {% if plan.notes %}
+      <pre class="pack-pre">{{ plan.notes }}</pre>
+      {% else %}
+      <p class="muted small">No notes recorded.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

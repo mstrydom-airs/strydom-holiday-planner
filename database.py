@@ -3,9 +3,9 @@
 import json
 import sqlite3
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, cast
 
-from flask import current_app, g
+from flask import Flask, current_app, g
 
 
 def _db_path() -> Path:
@@ -18,7 +18,7 @@ def get_db() -> sqlite3.Connection:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON")
         g.db = conn
-    return g.db
+    return cast(sqlite3.Connection, g.db)
 
 
 def close_db(_e: Any = None) -> None:
@@ -27,7 +27,7 @@ def close_db(_e: Any = None) -> None:
         conn.close()
 
 
-def register_db(app) -> None:
+def register_db(app: Flask) -> None:
     app.teardown_appcontext(close_db)
 
 
@@ -36,7 +36,9 @@ def ensure_trips_schema(conn: sqlite3.Connection) -> None:
         """
         CREATE TABLE IF NOT EXISTS trips (
             id TEXT PRIMARY KEY,
-            kind TEXT NOT NULL CHECK (kind IN ('day_trip', 'weekend', 'long_weekend', 'extended')),
+            kind TEXT NOT NULL CHECK (
+                kind IN ('day_trip', 'weekend', 'long_weekend', 'extended')
+            ),
             data TEXT NOT NULL,
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
@@ -51,7 +53,9 @@ def ensure_trips_schema(conn: sqlite3.Connection) -> None:
             """
             CREATE TABLE trips (
                 id TEXT PRIMARY KEY,
-                kind TEXT NOT NULL CHECK (kind IN ('day_trip', 'weekend', 'long_weekend', 'extended')),
+                kind TEXT NOT NULL CHECK (
+                    kind IN ('day_trip', 'weekend', 'long_weekend', 'extended')
+                ),
                 data TEXT NOT NULL,
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             )
@@ -68,9 +72,9 @@ def ensure_trips_schema(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def trip_row_to_plan(row: sqlite3.Row) -> Optional[Dict[str, Any]]:
+def trip_row_to_plan(row: sqlite3.Row) -> dict[str, Any] | None:
     try:
-        return json.loads(row["data"])
+        return cast(dict[str, Any], json.loads(row["data"]))
     except (json.JSONDecodeError, TypeError):
         return None
 
@@ -80,12 +84,12 @@ def count_trips(conn: sqlite3.Connection) -> int:
     return int(cur.fetchone()["c"])
 
 
-def fetch_plans_for_kind(conn: sqlite3.Connection, kind: str) -> List[Dict[str, Any]]:
+def fetch_plans_for_kind(conn: sqlite3.Connection, kind: str) -> list[dict[str, Any]]:
     cur = conn.execute(
         "SELECT data FROM trips WHERE kind = ? ORDER BY updated_at ASC, id ASC",
         (kind,),
     )
-    out: List[Dict[str, Any]] = []
+    out: list[dict[str, Any]] = []
     for row in cur:
         p = trip_row_to_plan(row)
         if p is not None:
@@ -93,7 +97,7 @@ def fetch_plans_for_kind(conn: sqlite3.Connection, kind: str) -> List[Dict[str, 
     return out
 
 
-def fetch_plan(conn: sqlite3.Connection, kind: str, trip_id: str) -> Optional[Dict[str, Any]]:
+def fetch_plan(conn: sqlite3.Connection, kind: str, trip_id: str) -> dict[str, Any] | None:
     cur = conn.execute(
         "SELECT data FROM trips WHERE id = ? AND kind = ?",
         (trip_id, kind),
@@ -104,7 +108,7 @@ def fetch_plan(conn: sqlite3.Connection, kind: str, trip_id: str) -> Optional[Di
     return trip_row_to_plan(row)
 
 
-def upsert_trip(conn: sqlite3.Connection, kind: str, plan: Dict[str, Any]) -> None:
+def upsert_trip(conn: sqlite3.Connection, kind: str, plan: dict[str, Any]) -> None:
     tid = plan.get("id")
     if not tid:
         return

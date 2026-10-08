@@ -1,0 +1,29 @@
+---
+description: Keep this repo and the Home Assistant planner on one trip database
+alwaysApply: true
+---
+
+# Travel Hub and Home Assistant
+
+This repo is the single copy of the planner. Home Assistant shows that copy
+from `/config/trip_planner` on `192.168.1.144`:
+`http://192.168.1.144:8123/travel-hub/`.
+
+`travel_hub.db` in this repo is the only trip list. Do not keep a second list
+in a Home Assistant calendar, automation, or YAML file.
+
+After any change here, including trips, sync before the task is done:
+
+```text
+python scripts/sync_ha_planner.py
+```
+
+The sync reads trips from the NUC into this database, then copies this repo's
+planner and database to the NUC and restarts it. A newer save on the NUC
+updates the matching trip here. A trip removed here is removed on the NUC at
+the next sync.
+
+A Cursor `stop` hook runs `python scripts/sync_ha_planner.py --if-stale`.
+
+A trip shows on a family calendar feed only when its saved traveler names
+include that family.

@@ -1,23 +1,88 @@
 {% extends "base.html" %}
 {% block title %}Home — Strydom Travel Hub{% endblock %}
 {% block content %}
-<section class="hero home-hero">
-  <div class="hero-copy">
-    <div class="home-heading-row">
-      <h1 class="hero-title">Strydom Travel Hub</h1>
-      <img class="home-heading-image" src="{{ url_for('static', filename='img/vibrant-holiday-badge.svg') }}" alt="Bright holiday travel badge">
+<h1 class="visually-hidden">Strydom Travel Hub</h1>
+<details class="smart-start-card plan-trip-card">
+  <summary>Plan a Trip</summary>
+  <form method="post" action="{{ url_for('smart_trip_new') }}" class="smart-start-form">
+    <div class="smart-start-top">
+      <label class="field smart-trip-name-field">
+        <input type="text" name="title" placeholder="Trip Name" aria-label="Trip name">
+      </label>
+      <label class="field">
+        <select name="plan_category" aria-label="Trip or booking type">
+          {% for option in trip_category_options %}
+          <option value="{{ option }}" {% if option == 'Accor Unit' %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field">
+        <select name="trip_kind" aria-label="Trip length or time">
+          {% for value, label in trip_length_options %}
+          <option value="{{ value }}" {% if value == 'weekend' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div class="field smart-date-range" data-date-range-picker aria-label="Trip dates">
+        <input type="hidden" name="start_date" value="{{ today_iso }}" data-range-start>
+        <input type="hidden" name="end_date" value="{{ today_iso }}" data-range-end>
+        <button type="button" class="date-range-trigger" data-range-trigger aria-expanded="false">
+          <span data-range-label>{{ today_iso }} to {{ today_iso }}</span>
+        </button>
+        <div class="date-range-popover" data-range-popover hidden>
+          <div class="date-range-head">
+            <button type="button" class="btn btn-ghost date-range-nav" data-range-prev aria-label="Previous month">‹</button>
+            <strong data-range-month></strong>
+            <button type="button" class="btn btn-ghost date-range-nav" data-range-next aria-label="Next month">›</button>
+          </div>
+          <div class="date-range-weekdays" aria-hidden="true">
+            <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+          </div>
+          <div class="date-range-grid" data-range-grid></div>
+        </div>
+      </div>
     </div>
-    <p class="hero-lead">Saved trips, soonest first. <a href="{{ url_for('holiday_planning') }}">Plan a Holiday</a> to add or duplicate a trip. Checklists live under <strong>Transport</strong> on each trip.</p>
-  </div>
-</section>
+    <div class="smart-going-submit-row" aria-label="Who is going">
+      <fieldset class="smart-going-field" aria-label="Who is going">
+        <legend>Who is going?</legend>
+        <div class="smart-going-checks">
+          {% for value, label in going_person_options %}
+          <label class="check">
+            <input type="radio" name="travelers" value="{{ value }}" {% if value == 'mario_esme' %}checked{% endif %}>
+            <span>{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <label class="field smart-companion-field">
+          <span>Anyone joining this group?</span>
+          <input type="text" name="travelers_other" placeholder="Friend or guest names (optional)">
+        </label>
+      </fieldset>
+      <button type="submit" class="btn btn-primary">Create smart trip</button>
+    </div>
+  </form>
+</details>
 
-<section class="holiday-summary">
-  <h2 class="summary-heading" id="at-a-glance-heading">At a glance</h2>
-  {% if glance_enriched %}
-  {% include 'partials/glance_trips.html' %}
-  {% else %}
-  <p class="muted glance-empty">No trips yet. <a href="{{ url_for('holiday_planning') }}">Plan a Holiday</a> to start.</p>
-  {% endif %}
+<section class="holiday-summary upcoming-summary" data-household-tabs>
+  <h2 class="summary-heading" id="at-a-glance-heading">Upcoming trips</h2>
+  <div class="household-tabs" role="tablist" aria-label="Whose trips">
+    <button type="button" class="household-tab is-active" role="tab" aria-selected="true" data-household-tab="mario_esme">Mario &amp; Esme</button>
+    <button type="button" class="household-tab" role="tab" aria-selected="false" data-household-tab="reuben_vanessa">Reuben &amp; Vanessa</button>
+  </div>
+  <div data-household-panel="mario_esme">
+    {% if mario_trips %}
+    {% with trips=mario_trips %}{% include 'partials/home_trip_list.html' %}{% endwith %}
+    {% else %}
+    <p class="muted glance-empty">No upcoming trips for Mario &amp; Esme.</p>
+    {% endif %}
+  </div>
+  <div data-household-panel="reuben_vanessa" hidden>
+    {% if reuben_trips %}
+    {% with trips=reuben_trips %}{% include 'partials/home_trip_list.html' %}{% endwith %}
+    {% else %}
+    <p class="muted glance-empty">No upcoming trips for Reuben &amp; Vanessa.</p>
+    {% endif %}
+  </div>
 </section>
 {% endblock %}
 

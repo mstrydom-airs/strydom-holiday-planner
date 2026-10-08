@@ -141,6 +141,38 @@ linked back to the ``REQ-`` they verify.
 
    ``tests/test_smoke.py::test_home_page__glance_trips__shows_month_timeline_rail``
 
+.. test:: Assistant suggestions include contextual packing
+   :id: TEST-018
+   :status: implemented
+   :links: IMPL-006
+   :verifies: REQ-006
+
+   ``tests/test_smart_trip.py::test_assistant_suggestions__caravan_trip__includes_contextual_packing``
+
+.. test:: Smart workspace create and save route
+   :id: TEST-019
+   :status: implemented
+   :links: IMPL-006
+   :verifies: REQ-006, UC-003
+
+   ``tests/test_smart_trip.py::test_trip_workspace__create_update_booking_and_packing__renders_saved_workspace``
+
+.. test:: Public place lookup fills phone and website
+   :id: TEST-020
+   :status: implemented
+   :links: IMPL-006
+   :verifies: REQ-006
+
+   ``tests/test_place_lookup.py::test_lookup_public_contact__beach_house_results__keeps_full_phone_and_official_site``
+
+.. test:: Family copy and selective delete
+   :id: TEST-021
+   :status: implemented
+   :links: IMPL-007
+   :verifies: REQ-007, UC-004
+
+   ``tests/test_households.py::test_copy_for_household__same_name__keeps_a_plan_for_each_family``
+
 .. needtable::
    :types: test
    :columns: id;title;status;verifies

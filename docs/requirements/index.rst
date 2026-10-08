@@ -96,3 +96,61 @@ linked to at least one specification (``SPEC-``) and one test (``TEST-``).
    Users can see which month they are viewing, use a vertical month rail to jump
    to that month, and activate controls with the keyboard. On narrow viewports the
    rail hides and month headings remain in the main column.
+
+.. req:: Smart trip workspace
+   :id: REQ-006
+   :status: implemented
+   :priority: high
+   :source: user request
+   :owner: Trip Planner maintainer
+   :tags: smart-trip; bookings; packing; assistant
+   :links: SPEC-006
+   :verifies: TEST-018, TEST-019, TEST-020
+
+   A user can create one main trip or booking workspace, then manage overview
+   details, the person or family member entering the plan, bookings, important
+   links, family tasks, budget, documents, packing, daily planning, printable
+   trip packs, and assistant suggestions without treating every booking as a
+   separate destination.
+
+.. uc:: Smart assisted planning
+   :id: UC-003
+   :status: implemented
+   :priority: high
+   :source: user request
+   :owner: Trip Planner maintainer
+   :tags: smart-trip; usability; assistant
+   :links: REQ-006
+   :verifies: TEST-019
+
+   The home page lets users start a smart trip by selecting trip length/time
+   separately from trip or booking type, such as ``Caravan trip`` plus
+   ``Long weekend``. The workspace presents a responsive mixed dashboard with tabs for bookings,
+   family tasks, packing, budget, documents, planner notes, and assistant
+   suggestions tailored to the selected planner profile.
+
+.. req:: Family copies on the home page
+   :id: REQ-007
+   :status: implemented
+   :priority: high
+   :source: user request
+   :owner: Trip Planner maintainer
+   :tags: home; household; delete
+   :links: SPEC-007
+   :verifies: TEST-021
+
+   Each upcoming trip shows only the family it belongs to. Two saved plans may
+   share a name so Mario & Esme and Reuben & Vanessa can each keep their own
+   copy. Clear saved plans deletes only the plans the user selects.
+
+.. uc:: Choose which saved plans to delete
+   :id: UC-004
+   :status: implemented
+   :priority: medium
+   :source: user request
+   :owner: Trip Planner maintainer
+   :tags: home; delete
+   :links: REQ-007
+   :verifies: TEST-021
+
+   The clear-plans page lists saved plans and removes only the ticked ones.

@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+{% block title %}{{ plan.title or 'Trip workspace' }} — Strydom Travel Hub{% endblock %}
+{% block content %}
+{% set selected_transport = plan.transport_overall|default(plan.transport|default([]), true) %}
+{% set selected_accommodation = plan.accommodation|default([]) %}
+{% set selected_travelers = plan.travelers|default([]) %}
+{% set selected_types = plan.holiday_types|default([]) %}
+{% set selected_things = plan.things_to_do_picks|default([]) %}
+{% macro extraction_alerts() -%}
+  {% if plan.extraction_flags|default([]) %}
+  <div class="workspace-alert">
+    <strong>Needs attention from imported details</strong>
+    <ul>
+      {% for flag in plan.extraction_flags %}
+      <li>{{ flag }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+{%- endmacro %}
+
+<section class="workspace-hero">
+  <div class="workspace-hero-copy">
+    <h1>
+      <svg class="workspace-title-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5V3h6v2h4a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4zm2 0h2V4h-2v1zm-6 5h14V7H5v3zm0 2v6h14v-6H5z"/></svg>
+      <span>{{ plan.title or 'Trip workspace' }}</span>
+    </h1>
+    <p class="hero-lead">{{ plan.plan_category }} · {{ date_label }}</p>
+  </div>
+  <div class="workspace-hero-actions">
+    <a class="btn icon-btn" href="{{ url_for('trip_pack', kind=trip_kind, trip_id=trip_id) }}" aria-label="Print trip" title="Print trip">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8V3h12v5H6zm12 2a2 2 0 0 1 2 2v5h-3v4H7v-4H4v-5a2 2 0 0 1 2-2h12zM8 19h8v-4H8v4z"/></svg>
+    </a>
+  </div>
+</section>
+
+<form class="workspace-shell" method="post" action="" data-task-autosave-url="{{ url_for('update_task_status', kind=trip_kind, trip_id=trip_id) }}">
+  <input type="hidden" name="active_tab" value="overview" data-active-tab-input>
+  <nav class="workspace-tabs" aria-label="Trip workspace sections">
+    <button type="button" class="workspace-tab is-active" data-workspace-tab="overview">Overview</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="bookings">Bookings</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="tasks" aria-label="Family Tasks">Tasks</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="packing">Packing</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="budget">Budget</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="documents" aria-label="Documents">Docs</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="planner">Planner</button>
+    <button type="button" class="workspace-tab" data-workspace-tab="assistant" aria-label="AI Assist">Assist</button>
+  </nav>
+
+  <section class="workspace-panel is-active" data-workspace-panel="overview">
+    <div class="workspace-card trip-key-summary">
+      {% if key_timeline_days %}
+      <div class="trip-overview-filters" data-no-autosave>
+        <label class="field">
+          <span>Show</span>
+          <select data-trip-filter-type>
+            <option value="key">Key events</option>
+            <option value="all" selected>Full itinerary</option>
+            <option value="Accommodation">Hotels / accommodation</option>
+            <option value="Flight">Flights / travel</option>
+            <option value="Activity">Activities</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Date</span>
+          <select data-trip-filter-date>
+            <option value="">Any date</option>
+            {% for row in key_timeline_rows %}
+            {% if row.date %}
+            <option value="{{ row.date }}">{{ row.date|fmt_dmy }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <div class="compact-trip-timeline" data-compact-timeline>
+        {% for day in key_timeline_days %}
+        <details class="compact-trip-day" data-trip-day data-row-date="{{ day.date }}">
+          <summary>
+            <span class="compact-trip-date">{{ day.date|fmt_dmy if day.date else 'No date' }}</span>
+            <span class="compact-trip-day-title">{{ day.title }}</span>
+          </summary>
+          <div class="compact-trip-day-rows">
+            {% for row in day.rows %}
+            <div class="compact-trip-row" data-row-category="{{ row.category }}" data-row-date="{{ row.date }}" data-row-key="{{ '0' if row.category == 'Activity' else '1' }}">
+              <span class="compact-trip-time">{{ row.time or '—' }}</span>
+              <span class="compact-trip-activity">{{ row.title }}</span>
+              {% if row.has_details or row.comments %}
+              <details class="compact-trip-more">
+                <summary aria-label="Show details for {{ row.title }}">Details</summary>
+                <dl>
+                  <button type="button" class="details-close" data-close-details aria-label="Close details">×</button>
+                  {% if row.comments %}<dt>Notes</dt><dd>{{ row.comments }}</dd>{% endif %}
+                  {% if row.address %}<dt>Address</dt><dd>{{ row.address }}</dd>{% endif %}
+                  {% if row.phone %}<dt>Phone</dt><dd>{{ row.phone }}</dd>{% endif %}
+                  {% if row.website %}<dt>Website</dt><dd><a href="{{ row.website }}" target="_blank" rel="noopener">{{ row.website }}</a></dd>{% endif %}
+                  {% if row.reference %}<dt>Reference</dt><dd>{{ row.reference }}</dd>{% endif %}
+                </dl>
+              </details>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted small">No hotel, flight, travel, or daily activity details imported yet. Use Holiday Details to paste confirmations into this trip.</p>
+      {% endif %}
+    </div>
+
+    <details class="overview-setup-more">
+      <summary>Edit trip setup</summary>
+      <div class="row two">
+        <label class="field">
+          <span>Trip name</span>
+          <input type="text" name="title" value="{{ plan.title or '' }}" placeholder="e.g. Tasmania loop">
+        </label>
+        <label class="field">
+          <span>Trip / booking type</span>
+          <select name="plan_category">
+            {% for option in trip_category_options %}
+            <option value="{{ option }}" {% if plan.plan_category == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      {% if trip_kind == 'extended' %}
+      <div class="row two date-range-pair">
+        <label class="field">
+          <span>From</span>
+          <input class="date-from" type="date" name="trip_start" value="{{ plan.trip_start or '' }}">
+        </label>
+        <label class="field">
+          <span>To</span>
+          <input class="date-to" type="date" name="trip_end" value="{{ plan.trip_end or '' }}">
+        </label>
+      </div>
+      {% elif trip_kind == 'day_trip' %}
+      <label class="field">
+        <span>Date</span>
+        <input class="date-from" type="date" name="start_date" value="{{ plan.start_date or '' }}">
+      </label>
+      {% else %}
+      <div class="row two date-range-pair">
+        <label class="field">
+          <span>From</span>
+          <input class="date-from" type="date" name="start_date" value="{{ plan.start_date or '' }}">
+        </label>
+        <label class="field">
+          <span>To</span>
+          <input class="date-to" type="date" name="end_date" value="{{ plan.end_date or '' }}">
+        </label>
+      </div>
+      {% endif %}
+
+    <div class="workspace-grid">
+      <div class="workspace-card overview-setup">
+        <h2>Who's going</h2>
+        <div class="checkbox-grid">
+          {% for value, label in traveler_options %}
+          <label class="check">
+            <input type="checkbox" name="travelers" value="{{ value }}" {% if value in selected_travelers %}checked{% endif %}>
+            <span>{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <label class="field">
+          <span>Other people or notes</span>
+          <input type="text" name="travelers_other" value="{{ plan.travelers_other or '' }}" placeholder="Guests, pets, helpers...">
+        </label>
+      </div>
+
+      <div class="workspace-card overview-setup">
+        <h2>Transport and stay</h2>
+        <p class="muted small">These picks also drive packing and checklist suggestions.</p>
+        <div class="mini-heading">Transport</div>
+        <div class="checkbox-grid">
+          {% for option in transport_options %}
+          <label class="check">
+            <input type="checkbox" name="transport" value="{{ option }}" {% if option in selected_transport %}checked{% endif %}>
+            <span>{{ option }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="mini-heading">Accommodation</div>
+        <div class="checkbox-grid">
+          {% for option in accommodation_checkboxes %}
+          <label class="check">
+            <input type="checkbox" name="accommodation" value="{{ option }}" {% if option in selected_accommodation %}checked{% endif %}>
+            <span>{{ option }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <label class="field">
+          <span>Hotel / named places</span>
+          <textarea name="accommodation_places" rows="2" placeholder="Hotel, caravan park, Airbnb...">{{ plan.accommodation_places or '' }}</textarea>
+        </label>
+      </div>
+    </div>
+
+    <div class="workspace-card overview-setup">
+      <h2>Activities</h2>
+      <div class="checkbox-grid">
+        {% for option in holiday_type_options %}
+        <label class="check">
+          <input type="checkbox" name="holiday_types" value="{{ option }}" {% if option in selected_types %}checked{% endif %}>
+          <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="checkbox-grid things-compact">
+        {% for option in things_to_do_options %}
+        <label class="check">
+          <input type="checkbox" name="things_to_do" value="{{ option }}" {% if option in selected_things %}checked{% endif %}>
+          <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <label class="field">
+        <span>Add another activity</span>
+        <input type="text" name="things_to_do_new" placeholder="e.g. winery tour, aquarium, golf">
+      </label>
+    </div>
+    </details>
+  </section>
+
+  <section class="workspace-panel" data-workspace-panel="bookings" hidden>
+    <div class="workspace-card">
+      <div class="workspace-card-heading">
+        <h2>Bookings</h2>
+        <button type="button" class="btn btn-secondary btn-compact" data-add-booking>Add booking</button>
+      </div>
+      {% for category in missing_booking_categories %}
+      <div class="booking-needed">
+        <strong>{{ category }} details not added</strong>
+        <span>Add the booking number, dates, and times when available.</span>
+      </div>
+      {% endfor %}
+      {% if 'phone' in (plan.extraction_flags|join(' ')) or 'website' in (plan.extraction_flags|join(' ')) %}
+      <div class="place-lookup" data-place-lookup-url="{{ url_for('lookup_places', kind=trip_kind, trip_id=trip_id) }}">
+        <button type="button" class="btn btn-secondary btn-compact" data-place-lookup-btn>Find contacts</button>
+        <span class="muted small" data-place-lookup-status aria-live="polite"></span>
+      </div>
+      {% endif %}
+      <div id="booking-rows" class="dynamic-list">
+        {% for booking in workspace_booking_rows %}
+        {% if booking.category or booking.name or booking.date or booking.reference or booking.address or booking.notes or booking.website %}
+        {% include 'partials/workspace_booking_row.html' %}
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="workspace-card">
+      <div class="workspace-card-heading">
+        <h2>Important links</h2>
+        <button type="button" class="btn btn-secondary btn-compact" data-add-link>Add link</button>
+      </div>
+      <div id="link-rows" class="dynamic-list">
+        {% for link in plan.important_links|default([]) %}
+        <div class="link-row compact-link-row">
+          <label class="visually-hidden" for="link-label-{{ loop.index }}">Link label</label>
+          <input id="link-label-{{ loop.index }}" type="text" name="link_label" value="{{ link.label or '' }}" placeholder="Label">
+          <label class="visually-hidden" for="link-url-{{ loop.index }}">Website address</label>
+          <input id="link-url-{{ loop.index }}" type="url" name="link_url" value="{{ link.url or '' }}" placeholder="https://...">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="workspace-panel" data-workspace-panel="tasks" hidden>
+    <div class="workspace-card">
+      <h2>Family tasks</h2>
+      <p class="muted small">Current checklist. Ticks save automatically.</p>
+      <p class="task-autosave-status muted small" data-task-save-status aria-live="polite"></p>
+      <div class="task-compact-list">
+        {% for task in plan.task_items|default([]) %}
+        <div class="task-compact-row" data-task-row="{{ loop.index0 }}">
+          <input type="hidden" name="task_owner" value="{{ task.owner or '' }}">
+          <input type="hidden" name="task_due" value="{{ task.due or '' }}">
+          <input type="hidden" name="task_status" value="{{ 'Done' if task.status == 'Done' else 'To do' }}" data-task-status-hidden>
+          <input type="checkbox" data-task-done data-inline-autosave onchange="window.tripTaskAutosave && window.tripTaskAutosave(this)" aria-label="Task done" {% if task.status == 'Done' %}checked{% endif %}>
+          <input type="hidden" name="task_text" value="{{ task.text or '' }}">
+          <span class="task-compact-label">{{ task.text or '' }}</span>
+        </div>
+        {% endfor %}
+        <div class="task-compact-row task-quick-add">
+          <input type="hidden" name="task_owner" value="">
+          <input type="hidden" name="task_due" value="">
+          <input type="hidden" name="task_status" value="To do" data-task-status-hidden>
+          <input type="checkbox" data-task-done data-inline-autosave onchange="window.tripTaskAutosave && window.tripTaskAutosave(this)" aria-label="New task done">
+          <input type="text" name="task_text" value="" placeholder="Add another checklist item..." aria-label="New task">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="workspace-panel" data-workspace-panel="packing" hidden>
+    <div class="workspace-card">
+      <h2>Packing and preparation</h2>
+      {% if plan.packing_items|default([]) %}
+      <div class="checkbox-grid">
+        {% for item in plan.packing_items %}
+        {% set item_text = item.text if item is mapping else item %}
+        <label class="check">
+          <input type="checkbox" name="packing_done" value="{{ item_text }}" {% if item.packed %}checked{% endif %}>
+          <span>{{ item_text }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <details class="compact-editor">
+        <summary>Edit packing list</summary>
+        <label class="field">
+          <span>One item per line</span>
+          <textarea name="packing_text" rows="6" placeholder="Phone charger&#10;Medication&#10;Tickets">{{ packing_text }}</textarea>
+        </label>
+      </details>
+    </div>
+  </section>
+
+  <section class="workspace-panel" data-workspace-panel="budget" hidden>
+    <div class="workspace-card">
+      <h2>Budget</h2>
+      <p class="muted small">Taken from the cost on each booking.</p>
+      <p class="budget-total" data-budget-total>Total: ${{ '%.2f'|format(budget_total) }}</p>
+      {% if plan.booking_items|default([]) %}
+      <ul class="budget-extract">
+        {% for booking in plan.booking_items %}
+        {% if booking.name or booking.cost %}
+        <li class="budget-extract-line" data-budget-line>
+          <span>
+            {% if booking.date %}{{ booking.date|fmt_dmy }}{% endif %}
+            {{ booking.name or 'Booking' }}
+          </span>
+          <strong data-budget-amount>{% if booking.cost %}${{ '%.2f'|format(booking.cost|float) }}{% else %}No cost yet{% endif %}</strong>
+        </li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted small">No bookings yet. Add them under Bookings.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="workspace-panel" data-workspace-panel="documents" hidden>
+    <div class="workspace-card">
+      <h2>Documents</h2>
+      <p class="muted small">Record where tickets, PDFs, screenshots, insurance, passports, or booking files are stored.</p>
+      <div class="document-import-panel" data-document-import-url="{{ url_for('import_itinerary', kind=trip_kind, trip_id=trip_id) }}">
+        <label class="field">
+          <span>Scan a new document</span>
+          <input type="file" data-document-import-file accept=".pdf,.txt,.eml,image/*,.doc,.docx">
+        </label>
+        <label class="field">
+          <span>Document note</span>
+          <input type="text" data-document-import-note placeholder="e.g. Hotel email, AI itinerary, flight confirmation">
+        </label>
+        <button type="button" class="btn btn-primary" data-document-import-btn>Scan and fill tabs</button>
+        <span class="muted small" data-document-import-status aria-live="polite"></span>
+      </div>
+      <ul class="document-file-list">
+        {% for document in plan.document_items|default([]) %}
+        {% if document.source != 'suggestion' %}
+        <li>
+          <strong>{{ document.label or 'File' }}</strong>
+          {% if document.notes %}<span class="muted small">{{ document.notes }}</span>{% endif %}
+          <input type="hidden" name="document_label" value="{{ document.label or '' }}">
+          <input type="hidden" name="document_location" value="{{ document.location or '' }}">
+          <input type="hidden" name="document_notes" value="{{ document.notes or '' }}">
+        </li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <section class="workspace-panel" data-workspace-panel="planner" hidden>
+    <div class="workspace-card planner-calendar-section">
+      <h2>Daily planner</h2>
+      {% set planner_days = plan.planner_days if plan.planner_days else {} %}
+      {% if calendar_dates and calendar_dates|length > 0 %}
+      <div class="planner-calendar">
+        {% for day in calendar_dates %}
+        {% if planner_days.get(day, '')|trim %}
+        <details class="planner-day">
+          <summary class="planner-day-label">{{ day|fmt_weekday_dmy }}</summary>
+          <label class="visually-hidden" for="workspace-pd-{{ day }}">Activities for {{ day|fmt_weekday_dmy }}</label>
+          <textarea id="workspace-pd-{{ day }}" name="planner_day_{{ day }}" rows="3">{{ planner_days.get(day, '') }}</textarea>
+        </details>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted small">Set dates in Edit trip setup to plan by day.</p>
+      {% endif %}
+      <label class="field">
+        <span>General notes</span>
+        <textarea name="notes" rows="5" placeholder="Budget, contacts, reminders...">{{ plan.notes or '' }}</textarea>
+      </label>
+    </div>
+  </section>
+
+  <section class="workspace-panel" data-workspace-panel="assistant" hidden>
+    <div class="workspace-card assistant-card">
+      <h2>AI Assist</h2>
+      <p class="muted small">Notes for this trip. Packing and booking ideas stay on their own tabs.</p>
+      {% if suggestions.packing_items %}
+      <h3>Suggested packing</h3>
+      <ul class="assistant-list">
+        {% for item in suggestions.packing_items %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <h3>Booking prompts</h3>
+      <ul class="assistant-list">
+        {% for item in suggestions.booking_prompts %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+
+      <h3>Planning prompts</h3>
+      <ul class="assistant-list">
+        {% for item in suggestions.planning_prompts %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+
+      <label class="field">
+        <span>Assistant notes / future AI instructions</span>
+        <textarea name="assistant_notes" rows="4" placeholder="e.g. Prefer caravan parks near beaches, avoid early flights...">{{ plan.assistant_notes or '' }}</textarea>
+      </label>
+    </div>
+  </section>
+
+  <div class="workspace-savebar">
+    <span class="muted small" data-workspace-save-status aria-live="polite">Autosaves</span>
+    <button type="submit" class="btn btn-secondary">Save</button>
+  </div>
+</form>
+
+<template id="booking-row-template">
+  {% set booking = {} %}
+  {% include 'partials/workspace_booking_row.html' %}
+</template>
+
+<template id="link-row-template">
+  <div class="link-row compact-link-row">
+    <label class="visually-hidden">Link label</label>
+    <input type="text" name="link_label" value="" placeholder="Label">
+    <label class="visually-hidden">Website address</label>
+    <input type="url" name="link_url" value="" placeholder="https://...">
+  </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.tripTaskAutosaveUrl = "{{ url_for('update_task_status', kind=trip_kind, trip_id=trip_id) }}";
+  window.tripTaskSetStatus = function (message) {
+    var status = document.querySelector("[data-task-save-status]");
+    if (status) {
+      status.textContent = message;
+    }
+  };
+  window.tripTaskAutosave = function (checkbox) {
+    var row = checkbox.closest(".task-compact-row");
+    var textField = row ? row.querySelector("[name='task_text']") : null;
+    var statusField = row ? row.querySelector("[data-task-status-hidden]") : null;
+    var text = textField ? textField.value.trim() : "";
+    if (!row || !text || !window.tripTaskAutosaveUrl) {
+      return Promise.resolve(null);
+    }
+    if (statusField) {
+      statusField.value = checkbox.checked ? "Done" : "To do";
+    }
+    window.tripTaskSetStatus("Saving...");
+    return fetch(window.tripTaskAutosaveUrl, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Accept": "application/json"},
+      body: JSON.stringify({
+        index: row.getAttribute("data-task-row") || "",
+        text: text,
+        done: checkbox.checked
+      })
+    }).then(function (response) {
+      if (!response.ok) {
+        throw new Error("Task save failed");
+      }
+      return response.json();
+    }).then(function (data) {
+      if (data && data.index !== undefined && data.index !== null) {
+        row.setAttribute("data-task-row", data.index);
+      }
+      window.tripTaskSetStatus("Saved");
+      return data;
+    }).catch(function () {
+      checkbox.checked = !checkbox.checked;
+      if (statusField) {
+        statusField.value = checkbox.checked ? "Done" : "To do";
+      }
+      window.tripTaskSetStatus("Could not save tick. Try again.");
+    });
+  };
+  window.tripTaskSuggestion = function (checkbox) {
+    var text = checkbox.value.trim();
+    var taskList = document.querySelector(".task-compact-list");
+    var label = checkbox.closest(".check");
+    if (!checkbox.checked || !text || !taskList || checkbox.getAttribute("data-saving") === "1") {
+      return;
+    }
+    checkbox.setAttribute("data-saving", "1");
+    checkbox.disabled = true;
+    fetch(window.tripTaskAutosaveUrl, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Accept": "application/json"},
+      body: JSON.stringify({index: "", text: text, done: false})
+    }).then(function (response) {
+      if (!response.ok) {
+        throw new Error("Suggestion save failed");
+      }
+      return response.json();
+    }).then(function (data) {
+      var exists = Array.prototype.some.call(
+        taskList.querySelectorAll("[name='task_text']"),
+        function (field) {
+          return field.value.trim().toLowerCase() === text.toLowerCase();
+        }
+      );
+      if (exists) {
+        if (label) {
+          label.remove();
+        }
+        window.tripTaskSetStatus("Saved");
+        return;
+      }
+      var row = document.createElement("div");
+      row.className = "task-compact-row";
+      row.setAttribute("data-task-row", data.index);
+      row.innerHTML = '<input type="hidden" name="task_owner" value=""><input type="hidden" name="task_due" value=""><input type="hidden" name="task_status" value="To do" data-task-status-hidden><input type="checkbox" data-task-done data-inline-autosave onchange="window.tripTaskAutosave && window.tripTaskAutosave(this)" aria-label="Task done"><input type="hidden" name="task_text"><span class="task-compact-label"></span>';
+      row.querySelector("[name='task_text']").value = text;
+      row.querySelector(".task-compact-label").textContent = text;
+      taskList.insertBefore(row, taskList.querySelector(".task-quick-add"));
+      if (label) {
+        label.remove();
+      }
+      window.tripTaskSetStatus("Saved");
+    }).catch(function () {
+      checkbox.checked = false;
+      checkbox.disabled = false;
+      checkbox.removeAttribute("data-saving");
+      window.tripTaskSetStatus("Could not add item. Try again.");
+    });
+  };
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-task-suggestion]:checked").forEach(window.tripTaskSuggestion);
+  });
+</script>
+<script src="{{ url_for('static', filename='js/trip-workspace.js', v='mobile-workspace-4') }}"></script>
+{% endblock %}

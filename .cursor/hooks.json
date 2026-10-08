@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": "python scripts/sync_ha_planner.py --if-stale",
+        "timeout": 90
+      }
+    ]
+  }
+}

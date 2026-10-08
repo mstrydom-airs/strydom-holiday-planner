@@ -1,0 +1,26 @@
+---
+description: Turn family trip-planning documents into saved planner updates
+alwaysApply: true
+---
+
+# Trip Planning Documents
+
+Private source documents are stored locally under:
+
+- `Trip Planning/MarioEsme/`
+- `Trip Planning/ReubenVanessa/`
+
+When a document is added, replaced, or revised:
+
+1. Read it and match it to a trip in `travel_hub.db`.
+2. Update the trip's dates, travelers, daily activities, bookings, tasks,
+   links, packing, notes, and document reference as applicable.
+3. Distinguish confirmed bookings from proposed activities or details that
+   still need confirmation.
+4. Do not copy passport numbers or unnecessary personal identifiers into the
+   planner.
+5. Run `python scripts/sync_ha_planner.py` and verify the matching trip on the
+   NUC before finishing.
+
+Trip source documents are ignored by Git and are not copied to the NUC. The
+planner database is the single structured version used by Home Assistant.

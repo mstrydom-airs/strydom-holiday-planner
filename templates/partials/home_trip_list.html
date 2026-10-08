@@ -1,0 +1,13 @@
+<ul class="home-trip-list">
+  {% for item in trips %}
+  <li class="home-trip-row">
+    <a class="home-trip-link" href="{{ url_for('trip_workspace', kind=item.kind, trip_id=item.plan.id) }}">
+      {% if item.plan.travelers_other|default('')|trim %}
+      <span class="home-trip-guests">With {{ item.plan.travelers_other }}</span>
+      {% endif %}
+      <span class="home-trip-date">{{ item.date_label }}</span>
+      <span class="home-trip-title">{{ item.plan.title or 'Trip' }}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>

@@ -53,3 +53,25 @@ file and symbol; the corresponding source docstring echoes the ID in its
    ``trip_planner.services.timeline.enrich_glance_timeline`` in
    ``trip_planner/services/timeline.py``. The ``home`` view in ``app.py`` passes
    ``glance_enriched`` and ``glance_rail`` to ``templates/index.html``.
+
+.. impl:: Smart trip workspace
+   :id: IMPL-006
+   :status: implemented
+   :links: SPEC-006
+   :implements: REQ-006, UC-003
+
+   ``app.smart_trip_new`` and ``app.trip_workspace`` in ``app.py`` render
+   ``templates/trip_workspace.html``. Assistant and parsing logic lives in
+   ``trip_planner.services.smart_trip``. Public phone and website lookup is
+   ``trip_planner.services.place_lookup.lookup_public_contact``.
+
+.. impl:: Family copies and selective plan delete
+   :id: IMPL-007
+   :status: implemented
+   :links: SPEC-007
+   :implements: REQ-007, UC-004
+
+   ``trip_planner.services.households`` and the ``home``,
+   ``copy_trip_for_household``, and ``clear_plans`` views in ``app.py``.
+   Templates: ``templates/index.html``, ``templates/partials/home_trip_list.html``,
+   and ``templates/clear_plans.html``.

@@ -6,6 +6,7 @@ TEST-008, TEST-009, TEST-011
 
 from __future__ import annotations
 
+from datetime import date
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -20,7 +21,7 @@ def _trip_id_from_redirect(location: str) -> str:
 
 
 def test_holiday_planning__empty_database__renders_start_panel(flask_client) -> None:  # type: ignore[no-untyped-def]
-    """Render the holiday hub with its accessible start controls.
+    """Render the holiday details hub with accessible trip controls.
 
     Pytest node: tests/test_app.py::test_holiday_planning__empty_database__renders_start_panel
     Needs: REQ-003, UC-001, TEST-002
@@ -31,7 +32,8 @@ def test_holiday_planning__empty_database__renders_start_panel(flask_client) -> 
 
     # Assert
     assert response.status_code == 200
-    assert b"Start Holiday Plan" in response.data
+    assert b"Holiday Details" in response.data
+    assert b"Import Emails and Bookings" in response.data
     assert b"Choose a destination" in response.data
     assert b"Trip length" in response.data
 
@@ -153,6 +155,81 @@ def test_plans_payload_for_holiday_json__duplicate_labels__adds_trip_type_suffix
     assert payload["destination_names"] == ["Noosa", "Tasmania"]
 
 
+def test_upcoming_trip_rows__past_shared_and_far__includes_every_saved_trip(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The home list keeps finished trips, shared trips, and trips past 12 months.
+
+    Pytest node:
+    tests/test_app.py::test_upcoming_trip_rows__past_shared_and_far__includes_every_saved_trip
+    Needs: REQ-005, UC-002, TEST-017
+    """
+    plans_by_kind = {
+        "day_trip": [],
+        "weekend": [],
+        "long_weekend": [],
+        "extended": [
+            {
+                "id": "past",
+                "title": "Legends",
+                "trip_start": "2026-09-04",
+                "trip_end": "2026-09-07",
+                "travelers": ["mario_esme"],
+            },
+            {
+                "id": "shared",
+                "title": "Easter",
+                "trip_start": "2027-03-25",
+                "trip_end": "2027-03-31",
+                "travelers": [],
+                "planner_profile": "all_of_us",
+            },
+            {
+                "id": "far",
+                "title": "Kings",
+                "trip_start": "2028-09-24",
+                "trip_end": "2028-10-05",
+                "travelers": [],
+            },
+        ],
+    }
+    monkeypatch.setattr(app_module, "_get_plans", lambda kind: plans_by_kind[kind])
+
+    rows = app_module._upcoming_trip_rows(today=date(2026, 10, 8))
+
+    assert [row["plan"]["id"] for row in rows] == ["shared", "far", "past"]
+
+
+def test_all_glance_groups_sorted__home_window__hides_old_trips(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Show only trips in the next 12 months on the home page.
+
+    Pytest node:
+    tests/test_app.py::test_all_glance_groups_sorted__home_window__hides_old_trips
+    Needs: REQ-005, UC-002, TEST-017
+    """
+
+    # Arrange
+    plans_by_kind = {
+        "day_trip": [
+            {"id": "old", "title": "Old movie", "start_date": "2026-01-01"},
+            {"id": "future", "title": "Beach", "start_date": "2026-10-01"},
+            {"id": "too-far", "title": "Far away", "start_date": "2027-10-05"},
+        ],
+        "weekend": [],
+        "long_weekend": [],
+        "extended": [],
+    }
+    monkeypatch.setattr(app_module, "_get_plans", lambda kind: plans_by_kind[kind])
+
+    # Act
+    groups = app_module._all_glance_groups_sorted(today=date(2026, 9, 29))
+
+    # Assert
+    assert [trip["title"] for group in groups for trip in group["group"]["trips"]] == ["Beach"]
+
+
 def test_calendar_dates_for_plan__extended_legs_without_overall_dates__uses_leg_span() -> None:
     """Build an inclusive planning calendar from extended-trip leg dates.
 
@@ -245,3 +322,139 @@ def test_search_route__saved_trip_matches_query__shows_result(flask_client) -> N
     assert response.status_code == 200
     assert b"Noosa" in response.data
     assert b"Weekend" in response.data
+
+
+def test_stay_timeline__checkout_time__shows_on_checkout_day() -> None:
+    """Show check-in and check-out times on their own days.
+
+    Pytest node: tests/test_app.py::test_stay_timeline__checkout_time__shows_on_checkout_day
+    Needs: REQ-006, TEST-018
+    """
+
+    # Arrange
+    rows: list[dict[str, str]] = []
+    booking = {
+        "category": "Accommodation",
+        "name": "Beach House Seaside Resort",
+        "date": "2026-12-11",
+        "end_date": "2026-12-18",
+        "time": "15:00",
+        "checkout_time": "11:00",
+        "address": "52 Marine Parade, Coolangatta QLD 4225, Australia",
+        "notes": "Check-in 3:00 PM AEST. Check-out 11:00 AM AEST.",
+    }
+
+    # Act
+    app_module._add_stay_checkin_checkout_rows(rows, booking, None, booking["name"])
+
+    # Assert
+    assert rows[0]["date"] == "2026-12-11"
+    assert rows[0]["time"] == "15:00"
+    assert rows[0]["title"] == "Check-in: Beach House Seaside Resort"
+    assert rows[1]["date"] == "2026-12-18"
+    assert rows[1]["time"] == "11:00"
+    assert rows[1]["title"] == "Check-out: Beach House Seaside Resort"
+
+
+def test_compact_timeline_days__event_and_activities__groups_under_event_heading() -> None:
+    """Use the named event as the heading for its day's expandable activities."""
+    plan = {
+        "booking_items": [
+            {
+                "category": "Tour / activity",
+                "name": "Agile Partner Event",
+                "date": "2026-10-15",
+                "time": "14:00",
+                "notes": "Business casual.",
+            }
+        ],
+        "planner_days": {
+            "2026-10-15": "14:00 Registration\n15:00 Product roadmap",
+        },
+    }
+
+    days = app_module._compact_timeline_days(plan, "extended")
+
+    assert len(days) == 1
+    assert days[0]["title"] == "Agile Partner Event"
+    assert [row["title"] for row in days[0]["rows"]] == [
+        "14:00 Registration",
+        "Agile Partner Event",
+        "15:00 Product roadmap",
+    ]
+    assert days[0]["rows"][1]["comments"] == "Business casual."
+
+
+def test_compact_timeline_days__same_activity_on_separate_dates__keeps_each_day() -> None:
+    """Repeated event names remain visible when they occur on different dates."""
+    plan = {
+        "planner_days": {
+            "2026-10-11": "Robot show / NECC activities.",
+            "2026-10-12": "Robot show / NECC activities.",
+            "2026-10-13": "Robot show / NECC activities.",
+        }
+    }
+
+    days = app_module._compact_timeline_days(plan, "extended")
+
+    assert [day["date"] for day in days] == ["2026-10-11", "2026-10-12", "2026-10-13"]
+
+
+def test_compact_timeline_days__stay_and_activity__uses_activity_as_day_heading() -> None:
+    """A check-in day summary describes the day's activity, not only the hotel."""
+    plan = {
+        "legs": [
+            {
+                "destination": "InterContinental Shanghai NECC",
+                "start_date": "2026-10-10",
+                "end_date": "2026-10-16",
+            }
+        ],
+        "planner_days": {
+            "2026-10-10": "Arrive Shanghai; check in and explore the area.",
+        },
+    }
+
+    days = app_module._compact_timeline_days(plan, "extended")
+
+    assert days[0]["title"] == "Arrive Shanghai; check in and explore the area."
+    assert len(days[0]["rows"]) == 2
+
+
+def test_workspace_booking_rows__extended_stay_legs__adds_missing_hotels() -> None:
+    """Accommodation legs appear on Bookings even without imported confirmations."""
+    plan = {
+        "booking_items": [],
+        "legs": [
+            {
+                "destination": "InterContinental Shanghai NECC",
+                "start_date": "2026-10-10",
+                "end_date": "2026-10-16",
+            }
+        ],
+    }
+
+    rows = app_module._workspace_booking_rows(plan, "extended")
+
+    assert rows == [
+        {
+            "category": "Accommodation",
+            "name": "InterContinental Shanghai NECC",
+            "date": "2026-10-10",
+            "end_date": "2026-10-16",
+        }
+    ]
+
+
+def test_booking_comments__flight_arrival__includes_arrival_and_notes() -> None:
+    """Flight details show the scheduled arrival without repeating departure."""
+    booking = {
+        "category": "Flight",
+        "time": "19:05",
+        "checkout_time": "21:50",
+        "notes": "PVG Terminal 2 to HKG Terminal 1.",
+    }
+
+    comments = app_module._booking_comments(booking)
+
+    assert comments == "Scheduled arrival: 21:50 · PVG Terminal 2 to HKG Terminal 1."

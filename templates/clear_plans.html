@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Clear saved plans — Strydom Travel Hub{% endblock %}
+{% block content %}
+<section class="holiday-summary">
+  <h1 class="summary-heading">Choose plans to delete</h1>
+  <p class="muted">Tick the plans to remove. Everything you leave unticked stays saved.</p>
+  {% if error %}
+  <p class="form-error" role="alert">{{ error }}</p>
+  {% endif %}
+  {% if plans %}
+  <form method="post" action="{{ url_for('clear_plans') }}" onsubmit="return confirm('Delete the selected plans?');">
+    <ul class="clear-plan-list">
+      {% for item in plans %}
+      <li>
+        <label class="check">
+          <input type="checkbox" name="trip_id" value="{{ item.plan.id }}">
+          <span>
+            <strong>{{ item.plan.title or 'Trip' }}</strong>
+            <span class="muted small">{{ item.date_label }} · {{ item.who }}</span>
+          </span>
+        </label>
+      </li>
+      {% endfor %}
+    </ul>
+    <button type="submit" class="btn btn-secondary">Delete selected</button>
+  </form>
+  {% else %}
+  <p class="muted glance-empty">No saved plans.</p>
+  {% endif %}
+</section>
+{% endblock %}
