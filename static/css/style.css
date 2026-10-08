@@ -2030,6 +2030,7 @@ body::before {
 
 .budget-extract-line {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
@@ -2067,6 +2068,24 @@ body::before {
 .budget-line-value {
   flex: 0 0 auto;
   text-align: right;
+}
+
+.budget-line-editor {
+  grid-template-columns: 4.4rem minmax(5.2rem, 6.5rem) 7rem;
+}
+
+.budget-line-editor label {
+  margin: 0;
+}
+
+.budget-line-editor input,
+.budget-line-editor select {
+  width: 100%;
+  min-height: 2rem;
+  padding: 0.28rem 0.35rem;
+  border-color: currentColor;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .budget-totals {
@@ -2450,6 +2469,15 @@ body::before {
 
   .booking-summary-cost input {
     width: 5.5rem;
+  }
+
+  .budget-line-copy,
+  .budget-line-editor {
+    width: 100%;
+  }
+
+  .budget-line-editor {
+    grid-template-columns: 4.2rem minmax(5rem, 1fr) 6.8rem;
   }
 
   .compact-link-row {

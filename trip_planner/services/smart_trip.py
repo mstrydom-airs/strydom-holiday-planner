@@ -347,6 +347,12 @@ def parse_budget_rows(form: Any) -> list[dict[str, str]]:
         "description": form.getlist("budget_description"),
         "amount": form.getlist("budget_amount"),
         "paid": form.getlist("budget_paid"),
+        "currency": form.getlist("budget_currency"),
+        "status": form.getlist("budget_status"),
+        "source": form.getlist("budget_source"),
+        "note": form.getlist("budget_note"),
+        "url": form.getlist("budget_url"),
+        "booking_index": form.getlist("budget_booking_index"),
     }
     return _parse_non_empty_rows(fields)
 
@@ -373,7 +379,7 @@ def budget_items_from_bookings(bookings: list[dict[str, str]]) -> list[dict[str,
     Needs: REQ-006, TEST-019
     """
     rows: list[dict[str, str]] = []
-    for booking in bookings:
+    for index, booking in enumerate(bookings):
         name = str(booking.get("name") or "").strip()
         cost = str(booking.get("cost") or "").strip()
         if not cost:
@@ -388,9 +394,40 @@ def budget_items_from_bookings(bookings: list[dict[str, str]]) -> list[dict[str,
                 "currency": str(booking.get("cost_currency") or "AUD"),
                 "status": str(booking.get("cost_status") or "estimated"),
                 "note": str(booking.get("cost_note") or ""),
+                "booking_index": str(index),
             }
         )
     return rows
+
+
+def apply_budget_rows(plan: dict[str, Any], rows: list[dict[str, str]]) -> None:
+    """Apply edited budget amounts to bookings and preserve other cost rows.
+
+    Args:
+        plan: Trip payload updated in place.
+        rows: Submitted budget rows from the workspace.
+
+    Needs: REQ-006, TEST-019
+    """
+
+    bookings = plan.get("booking_items") or []
+    extra_rows = []
+    for row in rows:
+        if row.get("source") != "booking":
+            extra_rows.append(row)
+            continue
+        try:
+            booking_index = int(row.get("booking_index") or "-1")
+            if booking_index < 0:
+                raise IndexError
+            booking = bookings[booking_index]
+        except (IndexError, ValueError):
+            continue
+        booking["cost"] = row.get("amount", "")
+        booking["cost_currency"] = row.get("currency", "AUD")
+        booking["cost_status"] = row.get("status", "estimated")
+        booking["cost_note"] = row.get("note", "")
+    plan["budget_items"] = extra_rows
 
 
 def budget_items_for_plan(plan: dict[str, Any]) -> list[dict[str, str]]:

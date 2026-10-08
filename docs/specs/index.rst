@@ -67,8 +67,12 @@ Detailed designs that elaborate one or more requirements.
    ``task_items``, ``budget_items``, ``document_items``,
    ``booking_import_text``, ``important_links``, ``packing_items``, and
    ``assistant_notes``. Deterministic assistant helpers in
-   Uploaded images and emails are scanned, and a booking number in the file fills
-   the matching stay. ``trip_planner.services.place_lookup`` can search the public web for a stay's
+   Holiday Details and the Documents tab accept multiple files in one selection
+   and start scanning automatically. Text PDFs, embedded PDF images, images,
+   emails, and text files are merged in order; extracted bookings, activities,
+   tasks, links, budget hints, and document records fill the selected trip.
+   A booking number in a file fills the matching stay.
+   ``trip_planner.services.place_lookup`` can search the public web for a stay's
    phone number and website. Confirmation numbers are not searched.
    On mobile, the workspace keeps its title and actions on one compact row and
    uses a short, horizontally scrolling tab bar that stays below the site
@@ -84,6 +88,8 @@ Detailed designs that elaborate one or more requirements.
    missing checklist items based on each trip's bookings, transport, category,
    and activities. Budget lines preserve their currency and confidence: confirmed
    booking totals render green, while researched or planning estimates render red.
+   Amount, currency, and confidence are editable directly on each Budget line;
+   overrides autosave back to the associated booking or researched cost row.
    ``trip_planner.services.smart_trip`` suggest packing and booking prompts from
    trip category, planner profile, transport, accommodation, and previous saved
    packing items. ``app.trip_pack`` renders a printable family trip pack.

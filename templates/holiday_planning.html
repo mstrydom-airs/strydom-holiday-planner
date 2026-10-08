@@ -33,8 +33,9 @@
 
   <div class="task-input-panel" data-task-panel="file">
     <label class="field">
-      <span>Email, PDF, ticket, image, or screenshot</span>
-      <input type="file" id="task-file" accept=".pdf,.txt,.eml,image/*,.doc,.docx">
+      <span>Emails, PDFs, tickets, images, or screenshots</span>
+      <input type="file" id="task-file" accept=".pdf,.txt,.eml,image/*" multiple>
+      <small>Selected files are scanned and added automatically.</small>
     </label>
     <label class="field">
       <span>Document note</span>
@@ -327,17 +328,22 @@
     window.location.href = href + hash;
   }
 
-  function importTripDocument(file, note) {
+  function importTripDocuments(files, note) {
     var parts = tripSelect.value.split(":");
-    if (parts.length !== 2) return;
+    if (parts.length !== 2 || !files.length) return;
     var url = workspaceUrlTemplate
       .replace("__kind__", encodeURIComponent(parts[0]))
       .replace("__id__", encodeURIComponent(parts[1])) + "/import-itinerary";
     var form = new FormData();
-    form.append("file", file);
+    files.forEach(function (file) {
+      form.append("files", file);
+    });
     form.append("note", note || "");
     addBtn.disabled = true;
-    addBtn.textContent = "Scanning...";
+    var importStatus = document.getElementById("task-import-status");
+    if (importStatus) {
+      importStatus.textContent = "Scanning " + files.length + " file(s)...";
+    }
     fetch(url, { method: "POST", body: form })
       .then(function (response) { return response.json(); })
       .then(function (payload) {
@@ -346,23 +352,24 @@
           return;
         }
         var row = selectedTrip();
-        if (row && payload.document) {
+        if (row && payload.documents) {
           row.document_items = row.document_items || [];
-          var location = payload.document.location || "";
-          var existing = row.document_items.find(function (item) {
-            return item.source === "upload" && item.location === location && location;
+          payload.documents.forEach(function (document) {
+            var location = document.location || "";
+            var existing = row.document_items.find(function (item) {
+              return item.source === "upload" && item.location === location && location;
+            });
+            if (existing) {
+              existing.notes = document.notes;
+              existing.label = document.label;
+            } else {
+              row.document_items.push(document);
+            }
           });
-          if (existing) {
-            existing.notes = payload.document.notes;
-            existing.label = payload.document.label;
-          } else {
-            row.document_items.push(payload.document);
-          }
           updateSummary();
         }
-        var importStatus = document.getElementById("task-import-status");
         if (importStatus) {
-          importStatus.textContent = (payload.summary && payload.summary.message) || "File added.";
+          importStatus.textContent = (payload.summary && payload.summary.message) || "Files added.";
         }
         document.getElementById("task-file").value = "";
         document.getElementById("task-file-note").value = "";
@@ -372,19 +379,25 @@
       })
       .finally(function () {
         addBtn.disabled = false;
-        addBtn.textContent = "Add to selected trip";
       });
+  }
+
+  function scanSelectedFiles() {
+    var input = document.getElementById("task-file");
+    var files = Array.prototype.slice.call(input.files || []);
+    var importStatus = document.getElementById("task-import-status");
+    if (!files.length) return;
+    if (!selectedTrip()) {
+      if (importStatus) importStatus.textContent = "Choose a trip to scan these files.";
+      return;
+    }
+    importTripDocuments(files, document.getElementById("task-file-note").value.trim());
   }
 
   addBtn.addEventListener("click", function () {
     if (!selectedTrip()) return;
     if (taskType.value === "file") {
-      var file = document.getElementById("task-file").files[0];
-      var note = document.getElementById("task-file-note").value.trim();
-      if (file) {
-        importTripDocument(file, note);
-        return;
-      }
+      scanSelectedFiles();
       return;
     }
     if (taskType.value === "website") {
@@ -405,8 +418,12 @@
     openSelectedTrip("#bookings");
   });
 
-  tripSelect.addEventListener("change", updateSummary);
+  tripSelect.addEventListener("change", function () {
+    updateSummary();
+    if (taskType.value === "file") scanSelectedFiles();
+  });
   taskType.addEventListener("change", showTaskPanel);
+  document.getElementById("task-file").addEventListener("change", scanSelectedFiles);
   fillTrips();
   showTaskPanel();
 })();

@@ -334,14 +334,37 @@
       <ul class="budget-extract">
         {% for item in budget_items %}
         {% if item.description or item.amount %}
-        <li class="budget-extract-line budget-{{ item.status or 'estimated' }}">
+        <li class="budget-extract-line budget-{{ item.status or 'estimated' }}" data-budget-edit-row>
           <span class="budget-line-copy">
             <strong>{{ item.description or 'Cost' }}</strong>
             {% if item.note %}<small>{{ item.note }}</small>{% endif %}
           </span>
-          <span class="budget-line-value">
-            <strong>{{ item.currency or 'AUD' }} {{ '{:,.2f}'.format(item.amount|float) }}</strong>
-            <small>{{ 'Confirmed' if item.status == 'confirmed' else 'Estimated' }}</small>
+          <span class="budget-line-value budget-line-editor">
+            <input type="hidden" name="budget_category" value="{{ item.category or '' }}">
+            <input type="hidden" name="budget_description" value="{{ item.description or '' }}">
+            <input type="hidden" name="budget_paid" value="{{ item.paid or '' }}">
+            <input type="hidden" name="budget_source" value="{{ item.source or 'manual' }}">
+            <input type="hidden" name="budget_note" value="{{ item.note or '' }}">
+            <input type="hidden" name="budget_url" value="{{ item.url or '' }}">
+            <input type="hidden" name="budget_booking_index" value="{{ item.booking_index or '' }}">
+            <label>
+              <span class="visually-hidden">Currency for {{ item.description or 'cost' }}</span>
+              <select name="budget_currency" aria-label="Currency for {{ item.description or 'cost' }}">
+                <option value="AUD" {% if item.currency|default('AUD') == 'AUD' %}selected{% endif %}>AUD</option>
+                <option value="CNY" {% if item.currency == 'CNY' %}selected{% endif %}>CNY</option>
+              </select>
+            </label>
+            <label>
+              <span class="visually-hidden">Amount for {{ item.description or 'cost' }}</span>
+              <input type="number" min="0" step="0.01" name="budget_amount" value="{{ item.amount or '' }}" aria-label="Amount for {{ item.description or 'cost' }}">
+            </label>
+            <label>
+              <span class="visually-hidden">Confidence for {{ item.description or 'cost' }}</span>
+              <select name="budget_status" aria-label="Confidence for {{ item.description or 'cost' }}">
+                <option value="estimated" {% if item.status != 'confirmed' %}selected{% endif %}>Estimated</option>
+                <option value="confirmed" {% if item.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+              </select>
+            </label>
           </span>
         </li>
         {% endif %}
@@ -359,14 +382,15 @@
       <p class="muted small">Record where tickets, PDFs, screenshots, insurance, passports, or booking files are stored.</p>
       <div class="document-import-panel" data-document-import-url="{{ url_for('import_itinerary', kind=trip_kind, trip_id=trip_id) }}">
         <label class="field">
-          <span>Scan a new document</span>
-          <input type="file" data-document-import-file accept=".pdf,.txt,.eml,image/*,.doc,.docx">
+          <span>Scan documents</span>
+          <input type="file" data-document-import-file accept=".pdf,.txt,.eml,image/*" multiple>
+          <small>Selected files scan automatically.</small>
         </label>
         <label class="field">
           <span>Document note</span>
           <input type="text" data-document-import-note placeholder="e.g. Hotel email, AI itinerary, flight confirmation">
         </label>
-        <button type="button" class="btn btn-primary" data-document-import-btn>Scan and fill tabs</button>
+        <button type="button" class="btn btn-primary" data-document-import-btn>Scan selected files</button>
         <span class="muted small" data-document-import-status aria-live="polite"></span>
       </div>
       <ul class="document-file-list">
@@ -568,5 +592,5 @@
     document.querySelectorAll("[data-task-suggestion]:checked").forEach(window.tripTaskSuggestion);
   });
 </script>
-<script src="{{ url_for('static', filename='js/trip-workspace.js', v='mobile-workspace-5') }}"></script>
+<script src="{{ url_for('static', filename='js/trip-workspace.js', v='mobile-workspace-7') }}"></script>
 {% endblock %}

@@ -199,20 +199,22 @@
     if (!fileInput || !button) {
       return;
     }
-    button.addEventListener("click", function () {
-      var file = fileInput.files[0];
-      if (!file) {
+    function scanSelectedFiles() {
+      var files = Array.prototype.slice.call(fileInput.files || []);
+      if (!files.length) {
         if (status) {
-          status.textContent = "Choose a document first.";
+          status.textContent = "Choose one or more documents first.";
         }
         return;
       }
       var form = new FormData();
-      form.append("file", file);
+      files.forEach(function (file) {
+        form.append("files", file);
+      });
       form.append("note", noteInput ? noteInput.value.trim() : "");
       button.disabled = true;
       if (status) {
-        status.textContent = "Scanning document and filling tabs...";
+        status.textContent = "Scanning " + files.length + " file(s) and filling tabs...";
       }
       window.fetch(panel.getAttribute("data-document-import-url"), {
         method: "POST",
@@ -230,7 +232,9 @@
         }
         button.disabled = false;
       });
-    });
+    }
+    button.addEventListener("click", scanSelectedFiles);
+    fileInput.addEventListener("change", scanSelectedFiles);
   }
 
   function initPlaceLookup() {
@@ -624,6 +628,19 @@
     window.tripWorkspaceAutosave = schedule;
   }
 
+  function initBudgetEditors() {
+    document.querySelectorAll("[data-budget-edit-row]").forEach(function (row) {
+      var confidence = row.querySelector("[name='budget_status']");
+      if (!confidence) {
+        return;
+      }
+      confidence.addEventListener("change", function () {
+        row.classList.toggle("budget-confirmed", confidence.value === "confirmed");
+        row.classList.toggle("budget-estimated", confidence.value !== "confirmed");
+      });
+    });
+  }
+
   function addTemplate(buttonSelector, targetSelector, templateSelector) {
     var button = document.querySelector(buttonSelector);
     var target = document.querySelector(targetSelector);
@@ -652,6 +669,7 @@
     initDetailsPopovers();
     initBackButton();
     initTaskCheckboxes();
+    initBudgetEditors();
   }
 
   if (document.readyState === "loading") {

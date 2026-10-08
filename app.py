@@ -61,12 +61,14 @@ from trip_planner.services.households import (
 from trip_planner.services.place_lookup import fill_missing_place_contacts
 from trip_planner.services.smart_trip import (
     append_suggestions_to_packing,
+    apply_budget_rows,
     assistant_suggestions,
     budget_items_for_plan,
     budget_totals_by_currency,
     normalise_workspace_plan,
     packing_text,
     parse_booking_rows,
+    parse_budget_rows,
     parse_document_rows,
     parse_packing_text,
     parse_task_rows,
@@ -901,11 +903,14 @@ def _time_from_activity(text):
 
 
 def _extract_pdf_text(upload) -> str:
-    """Extract text from an uploaded PDF file."""
+    """Extract text and OCR embedded page images from an uploaded PDF file."""
     reader = PdfReader(io.BytesIO(upload.read()))
     pages = []
     for page in reader.pages:
         text = page.extract_text() or ""
+        if not text.strip():
+            image_parts = [image_text(image.data) for image in page.images]
+            text = "\n".join(part for part in image_parts if part)
         if text.strip():
             pages.append(text)
     return "\n".join(pages).strip()
@@ -2410,6 +2415,8 @@ def _apply_workspace_sections(plan):
         plan["booking_import_text"] = request.form.get("booking_import_text", "")
     plan["task_items"] = parse_task_rows(request.form)
     _append_selected_checklist_tasks(plan)
+    if "budget_amount" in request.form:
+        apply_budget_rows(plan, parse_budget_rows(request.form))
     plan["budget_items"] = budget_items_for_plan(plan)
     plan["document_items"] = parse_document_rows(request.form)
     plan["important_links"] = _parse_important_links()
@@ -2733,29 +2740,39 @@ def lookup_places(kind, trip_id):
 
 @app.route("/trip/<kind>/<trip_id>/import-itinerary", methods=["POST"])
 def import_itinerary(kind, trip_id):
-    """Import and scan a travel document into every workspace tab."""
+    """Import and scan one or more travel documents into every workspace tab."""
     if kind not in TRIP_KINDS:
         return jsonify({"ok": False, "error": "Unknown trip type"}), 400
     plan = _find_plan(kind, trip_id)
     if not plan:
         return jsonify({"ok": False, "error": "Trip not found"}), 404
-    upload = request.files.get("file")
-    if not upload or not upload.filename:
-        return jsonify({"ok": False, "error": "Choose a file first"}), 400
+    uploads = request.files.getlist("files") or request.files.getlist("file")
+    uploads = [upload for upload in uploads if upload and upload.filename]
+    if not uploads:
+        return jsonify({"ok": False, "error": "Choose one or more files first"}), 400
     normalise_workspace_plan(plan, kind)
-    raw_text = _extract_document_text(upload)
-    summary = _import_itinerary_text(
-        plan,
-        raw_text,
-        upload.filename,
-        request.form.get("note", "").strip(),
-    )
+    summaries = [
+        _import_itinerary_text(
+            plan,
+            _extract_document_text(upload),
+            upload.filename,
+            request.form.get("note", "").strip(),
+        )
+        for upload in uploads
+    ]
     _replace_plan(kind, plan)
+    documents = [summary["imported_document"] for summary in summaries]
     return jsonify(
         {
             "ok": True,
-            "summary": summary,
-            "document": summary.get("imported_document"),
+            "summary": {
+                "files": len(summaries),
+                "bookings": sum(summary["bookings"] for summary in summaries),
+                "activities": sum(summary["activities"] for summary in summaries),
+                "message": f"Scanned {len(summaries)} file(s) and updated the trip.",
+            },
+            "documents": documents,
+            "document": documents[-1],
             "redirect": url_for("trip_workspace", kind=kind, trip_id=trip_id),
         }
     )

@@ -5,9 +5,12 @@ Needs: REQ-006, SPEC-006, TEST-018, TEST-019
 
 from __future__ import annotations
 
+import io
+
 from trip_planner.services.smart_trip import (
     add_typical_trip_tasks,
     append_suggestions_to_packing,
+    apply_budget_rows,
     assistant_suggestions,
     budget_items_for_plan,
     budget_totals_by_currency,
@@ -140,7 +143,20 @@ def test_booking_and_packing_helpers__mixed_rows__keep_only_useful_values() -> N
         {"text": "Tickets", "packed": True, "source": "workspace"},
     ]
     assert tasks == [{"owner": "Mario", "text": "Check tyres", "due": "", "status": ""}]
-    assert budget == [{"category": "Fuel", "description": "Trip fuel", "amount": "80", "paid": ""}]
+    assert budget == [
+        {
+            "category": "Fuel",
+            "description": "Trip fuel",
+            "amount": "80",
+            "paid": "",
+            "currency": "",
+            "status": "",
+            "source": "",
+            "note": "",
+            "url": "",
+            "booking_index": "",
+        }
+    ]
     assert documents == [{"label": "Tickets", "location": "Phone", "notes": "QR"}]
 
 
@@ -175,6 +191,42 @@ def test_budget_helpers__mixed_currencies__preserve_research_and_total_separatel
 
     assert budget_totals_by_currency(items) == {"AUD": 100.0, "CNY": 360.0}
     assert items[1]["description"] == "Tower tickets"
+
+
+def test_apply_budget_rows__confirmed_override__updates_booking_and_extra_costs() -> None:
+    """Store actual values and confidence edited directly in Budget.
+
+    Needs: REQ-006, TEST-019
+    """
+
+    plan = {
+        "booking_items": [{"name": "Hotel", "cost": "100", "cost_status": "estimated"}],
+        "budget_items": [],
+    }
+    rows = [
+        {
+            "description": "Hotel",
+            "amount": "125",
+            "currency": "AUD",
+            "status": "confirmed",
+            "source": "booking",
+            "booking_index": "0",
+            "note": "Final invoice",
+        },
+        {
+            "description": "Meals",
+            "amount": "300",
+            "currency": "AUD",
+            "status": "confirmed",
+            "source": "online",
+        },
+    ]
+
+    apply_budget_rows(plan, rows)
+
+    assert plan["booking_items"][0]["cost"] == "125"
+    assert plan["booking_items"][0]["cost_status"] == "confirmed"
+    assert plan["budget_items"] == [rows[1]]
 
 
 def test_typical_tasks__overseas_flight_and_hotel__adds_relevant_items_once() -> None:
@@ -317,6 +369,10 @@ def test_trip_workspace__create_update_booking_and_packing__renders_saved_worksp
             "budget_description": ["Powered site"],
             "budget_amount": ["320.50"],
             "budget_paid": ["Deposit"],
+            "budget_currency": ["AUD"],
+            "budget_status": ["confirmed"],
+            "budget_source": ["booking"],
+            "budget_booking_index": ["0"],
             "document_label": ["Park confirmation"],
             "document_location": ["Email"],
             "document_notes": ["Search ABC123"],
@@ -384,6 +440,38 @@ def test_trip_workspace__autosave_booking__persists_without_redirect(flask_clien
     assert b"BH482910" in opened.data
     assert b"Add booking" in opened.data
     assert b"Autosaves" in opened.data
+
+
+def test_import_itinerary__multiple_files__scans_and_records_every_file(flask_client) -> None:  # type: ignore[no-untyped-def]
+    """Scan a multi-file selection into one trip in a single request.
+
+    Needs: REQ-006, TEST-020
+    """
+
+    created = flask_client.post(
+        "/smart-trip/new",
+        data={"title": "Multi-file trip", "plan_category": "Hotel", "trip_kind": "weekend"},
+    )
+    trip_id = _trip_id(created.headers["Location"])
+
+    imported = flask_client.post(
+        f"/trip/weekend/{trip_id}/import-itinerary",
+        data={
+            "files": [
+                (io.BytesIO(b"Hotel confirmation HTL12345"), "hotel.txt"),
+                (io.BytesIO(b"Flight booking FLT67890"), "flight.txt"),
+            ],
+            "note": "",
+        },
+        content_type="multipart/form-data",
+    )
+    opened = flask_client.get(f"/trip/weekend/{trip_id}")
+
+    assert imported.status_code == 200
+    assert imported.json["summary"]["files"] == 2
+    assert len(imported.json["documents"]) == 2
+    assert b"hotel.txt" in opened.data
+    assert b"flight.txt" in opened.data
 
 
 def test_trip_workspace_task_status__autosave_checkbox__persists_done_state(
